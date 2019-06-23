@@ -1,0 +1,34 @@
+{
+    "name": "node-red-contrib-opc-da",
+    "version": "0.0.1",
+    "description": "A Node-RED node to talk to automation devices using the OPC-DA protocol",
+    "main": "index.js",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/netsmarttech/node-red-contrib-opc-da.git"
+    },
+    "bugs": {
+        "url": "https://github.com/netsmarttech/node-red-contrib-opc-da/issues"
+    },
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "keywords": [
+        "hardware",
+        "automation",
+        "opc",
+        "opc-da",
+        "data-access",
+        "dcom",
+        "dce-rpc",
+        "plc",
+        "node-red"
+    ],
+    "node-red": {
+        "nodes": {
+            "opc-da": "red/opc-da.js"
+        }
+    },
+    "author": "Smart-Tech Controle e Automação Ltda.",
+    "license": "Apache-2.0"
+}

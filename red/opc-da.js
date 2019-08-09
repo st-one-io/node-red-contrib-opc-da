@@ -1,3 +1,4 @@
+//@ts-check
 /*
    Copyright 2019 Smart-Tech Controle e Automação
 
@@ -22,9 +23,9 @@
 function equals(a, b) {
     if (a === b) return true;
     if (a == null || b == null) return false;
-    if(Array.isArray(a) && Array.isArray(b)) {
+    if (Array.isArray(a) && Array.isArray(b)) {
         if (a.length != b.length) return false;
-        
+
         for (var i = 0; i < a.length; ++i) {
             if (a[i] !== b[i]) return false;
         }
@@ -33,373 +34,149 @@ function equals(a, b) {
     return false;
 }
 
-var MIN_CYCLE_TIME = 50;
-
 module.exports = function (RED) {
-    "use strict";
 
-    var util = require('util');
-    var nodes7 = require('nodes7');
-    var EventEmitter = require('events').EventEmitter;
-
-    // ---------- OPC-DA Endpoint ----------
-
-    function createTranslationTable(vars) {
-        var res = {};
-
-        vars.forEach(function (elm) {
-            if (!elm.name || !elm.addr) {
-                //skip incomplete entries
-                return;
-            }
-            res[elm.name] = elm.addr;
-        });
-
-        return res;
-    }
+    const EventEmitter = require('events').EventEmitter;
 
     function generateStatus(status, val) {
-        var obj;
+        let obj;
 
         if (typeof val != 'string' && typeof val != 'number' && typeof val != 'boolean') {
-            val = RED._("opc-da.endpoint.status.online");
+            val = RED._("opc-da.status.online");
         }
 
         switch (status) {
             case 'online':
-                obj = {
-                    fill: 'green',
-                    shape: 'dot',
-                    text: val.toString()
-                };
+                obj = { fill: 'green', shape: 'dot', text: val.toString() };
                 break;
             case 'badvalues':
-                obj = {
-                    fill: 'yellow',
-                    shape: 'dot',
-                    text: RED._("opc-da.endpoint.status.badvalues")
-                };
+                obj = { fill: 'yellow', shape: 'dot', text: RED._("opc-da.status.badvalues") };
                 break;
             case 'offline':
-                obj = {
-                    fill: 'red',
-                    shape: 'dot',
-                    text: RED._("opc-da.endpoint.status.offline")
-                };
+                obj = { fill: 'red', shape: 'dot', text: RED._("opc-da.status.offline") };
                 break;
             case 'connecting':
-                obj = {
-                    fill: 'yellow',
-                    shape: 'dot',
-                    text: RED._("opc-da.endpoint.status.connecting")
-                };
+                obj = { fill: 'yellow', shape: 'dot', text: RED._("opc-da.status.connecting") };
                 break;
             default:
-                obj = {
-                    fill: 'grey',
-                    shape: 'dot',
-                    text: RED._("opc-da.endpoint.status.unknown")
-                };
+                obj = { fill: 'grey', shape: 'dot', text: RED._("opc-da.status.unknown") };
         }
         return obj;
     }
 
-    function validateTSAP(num) {
-        num = num.toString();
-        if (num.length != 2) return false;
-        if (!(/^[0-9a-fA-F]+$/.test(num))) return false;
-        var i = parseInt(num, 16);
-        if (isNaN(i) || i < 0 || i > 0xff) return false;
-        return true;
-    }
+    RED.httpAdmin.get('/opc-da/browseItems', RED.auth.needsPermission('opc-da.list'), function (req, res) {
+        let params = req.query
+        
+        // TODO call opc-da and browse all items
 
-    function OPCDAEndpoint(config) {
-        EventEmitter.call(this);
-        var node = this;
-        var oldValues = {};
-        var connOpts;
-        var status;
-        var readInProgress = false;
-        var readDeferred = 0;
-        var vars = config.vartable;
-        var isVerbose = (config.verbose == 'on' || config.verbose == 'off') ? (config.verbose == 'on') : RED.settings.get('verbose');
-        var connectTimeoutTimer;
-        var connected = false;
-        var currentCycleTime = config.cycletime;
-        node.writeInProgress = false;
-        node.writeQueue = [];
+        setTimeout(() => {
+            let haveErr = Math.random() > 0.6;
+            let obj;
 
-        if (typeof vars == 'string') {
-            vars = JSON.parse(vars);
-        }
-
-        RED.nodes.createNode(this, config);
-
-        //avoids warnings when we have a lot of OPCDAIn nodes
-        this.setMaxListeners(0);
-
-        connOpts = {
-            host: config.address,
-            port: config.port
-        };
-
-        if (config.connmode === undefined) {
-            //default for old configurations
-            config.connmode = 'rack-slot';
-        }
-
-
-        switch (config.connmode) {
-            case "rack-slot":
-                connOpts.rack = config.rack;
-                connOpts.slot = config.slot;
-                break;
-            case "tsap":
-                if (!validateTSAP(config.localtsaphi) ||
-                    !validateTSAP(config.localtsaplo) ||
-                    !validateTSAP(config.remotetsaphi) ||
-                    !validateTSAP(config.remotetsaplo)) {
-                    node.error(RED._("opc-da.error.invalidtsap", config));
-                    return;
+            if(haveErr) {
+                res.json({err: "Invalid credentials"});
+            } else {
+                let items = new Array(Math.floor(Math.random() * 100));
+                for (let i = 0; i < items.length; i++) {
+                    items[i] = 'item' + i;
                 }
 
-                connOpts.localTSAP = parseInt(config.localtsaphi, 16) << 8;
-                connOpts.localTSAP += parseInt(config.localtsaplo, 16);
-                connOpts.remoteTSAP = parseInt(config.remotetsaphi, 16) << 8;
-                connOpts.remoteTSAP += parseInt(config.remotetsaplo, 16);
-                break;
-            default:
-                node.error(RED._("opc-da.error.invalidconntype", config));
-                return;
+                res.json({items});
+            }
+        }, 500);
+    });
+
+    /**
+     * 
+     * @param {object} config 
+     */
+    function OPCDAServer(config) {
+        EventEmitter.call(this);
+        const node = this;
+        RED.nodes.createNode(this, config);
+
+        if (!this.credentials) {
+            return node.error(RED._("opc-da.error.missingconfig"));
         }
 
-        node._vars = createTranslationTable(vars);
+        //init variables
+        let status = 'unknown';
+        let isVerbose = (config.verbose == 'on' || config.verbose == 'off') ? (config.verbose == 'on') : RED.settings.get('verbose');
+        let connOpts = {
+            address: config.address,
+            domain: config.domain,
+            username: this.credentials.username,
+            password: this.credentials.password,
+            clsid: config.clsid
+        };
 
         node.getStatus = function getStatus() {
             return status;
         };
 
-        node.writeVar = function writeVar(obj) {
-            node.writeQueue.push(obj);
-
-            if (!node.writeInProgress) {
-                writeNext();
-            }
-
-        };
-
-        /**
-         * updates the current cycle time on the fly. A value of 0
-         * disables the cyclic reading of variables, and for positive values
-         * a minimum of 50 ms is enforced
-         * 
-         * @param {number} interval the cycle time interval, in ms
-         * @returns {string|undefined} an string with the error if any, or undefined
-         */
-        node.updateCycleTime = function updateCycleTime(interval){
-            let time = parseInt(interval);
-
-            if (isNaN(time) || time < 0) {
-                return RED._("opc-da.error.invalidtimeinterval", {interval: interval});
-            }
-
-            clearInterval(node._td);
-
-            // don't set a new timer if value is zero
-            if (!time) return;
-
-            if (time < MIN_CYCLE_TIME) {
-                node.warn(RED._("opc-da.info.cycletimetooshort", { min: MIN_CYCLE_TIME}), {});
-                time = MIN_CYCLE_TIME;
-            }
-
-            currentCycleTime = time;
-            node._td = setInterval(doCycle, time);
-        }
-
-        function onWritten(err) {
-            node.writeInProgress = false;
-
-            writeNext();
-
-            if (err) {
-                manageStatus('badvalues');
-                node.error(RED._("opc-da.error.badvalues"), {});
-                return;
-            }
-
-            manageStatus('online');
-        }
-
-        function writeNext() {
-            if (!connected) return;
-
-            var nextElm = node.writeQueue.shift();
-            if (nextElm) {
-                node._conn.writeItems(nextElm.name, nextElm.val, onWritten);
-                node.writeInProgress = true;
-            }
-        }
-
-        function manageStatus(newStatus) {
-            if (status == newStatus) return;
-
-            status = newStatus;
-            node.emit('__STATUS__', {
-                status: status
-            });
-        }
-
-        function cycleCallback(err, values) {
-            readInProgress = false;
-
-            if (readDeferred && connected) {
-                doCycle();
-                readDeferred = 0;
-            }
-
-            if (err) {
-                manageStatus('badvalues');
-                node.error(RED._("opc-da.error.badvalues"), {});
-                return;
-            }
-
-            manageStatus('online');
-
-            var changed = false;
-            node.emit('__ALL__', values);
-            Object.keys(values).forEach(function (key) {
-                if (!equals(oldValues[key], values[key])) {
-                    changed = true;
-                    node.emit(key, values[key]);
-                    node.emit('__CHANGED__', {
-                        key: key,
-                        value: values[key]
-                    });
-                    oldValues[key] = values[key];
-                }
-            });
-            if (changed) node.emit('__ALL_CHANGED__', values);
-        }
-
-        function doCycle() {
-            if (!readInProgress && connected) {
-                node._conn.readAllItems(cycleCallback);
-                readInProgress = true;
-            } else {
-                readDeferred++;
-
-                if (readDeferred > 10) {
-                    node.warn(RED._("opc-da.error.noresponse"), {});
-                    connect(); //this also drops any existing connection
-                }
-            }
-        }
-        node.doCycle = doCycle;
-
-        function onConnect(err) {
-            var varKeys = Object.keys(node._vars);
-
-            clearTimeout(connectTimeoutTimer);
-
-            if (err) {
-                manageStatus('offline');
-                node.error(RED._("opc-da.error.onconnect") + err.toString(), {});
-
-                connected = false;
-
-                //try to reconnect if failed to connect
-                connectTimeoutTimer = setTimeout(connect, 5000);
-
-                return;
-            }
-
-            readInProgress = false;
-            readDeferred = 0;
-            connected = true;
-
-            manageStatus('online');
-
-            if (!varKeys || !varKeys.length) {
-                node.warn(RED._("opc-da.info.novars"), {});
-                return;
-            }
-
-            node._conn.setTranslationCB(function (tag) {
-                return node._vars[tag];
-            });
-            node._conn.addItems(varKeys);
-            node.updateCycleTime(currentCycleTime);
-
-            writeNext();
-        }
-
-        function closeConnection(done) {
-            //ensure we won't try to connect again if anybody wants to close it
-            clearTimeout(connectTimeoutTimer);
-
-            if (isVerbose) {
-                node.log(RED._("opc-da.info.disconnect"));
-            }
-            manageStatus('offline');
-            clearInterval(node._td);
-
-            function doCb() {
-                node._conn = null;
-                if (typeof done == 'function') done();
-            }
-            connected = false;
-
-            if (node._conn) {
-                node._conn.dropConnection(doCb);
-            } else {
-                process.nextTick(doCb);
-            }
-        }
-
-        node.on('close', closeConnection);
-
-
-        function connect() {
-            function doConnect() {
-                manageStatus('connecting');
-
-                if (isVerbose) {
-                    node.log(RED._("opc-da.info.connect"));
-                }
-
-                connected = false;
-                node._conn = new nodes7({
-                    silent: !isVerbose,
-                    debug: isVerbose
-                });
-                node._conn.globalTimeout = parseInt(config.timeout) || 1500;
-                node._conn.initiateConnection(connOpts, onConnect);
-            }
-
-            if (node._conn) {
-                closeConnection(doConnect);
-            } else {
-                process.nextTick(doConnect);
-            }
-        }
-
-        connect();
-
     }
-    RED.nodes.registerType("opc-da endpoint", OPCDAEndpoint);
+    RED.nodes.registerType("opc-da server", OPCDAServer, {
+        credentials: {
+            username: { type: "text" },
+            password: { type: "password" }
+        }
+    });
 
-    // ---------- OPC-DA In ----------
 
-    function OPCDAIn(config) {
-        var node = this;
-        var statusVal;
+    // ---------- OPC-DA Group ----------
+    /**
+     * @param {object} config 
+     * @param {string} config.server
+     * @param {number} config.updaterate
+     * @param {number} config.deadband
+     * @param {boolean} config.active
+     * @param {boolean} config.validate
+     * @param {object[]} config.vartable
+     */
+    function OPCDAGroup(config) {
+        EventEmitter.call(this);
+        const node = this;
         RED.nodes.createNode(this, config);
 
-        node.endpoint = RED.nodes.getNode(config.endpoint);
-        if (!node.endpoint) {
+        node.server = RED.nodes.getNode(config.server);
+        if (!node.server) {
             return node.error(RED._("opc-da.error.missingconfig"));
         }
+
+        let updateRate = config.updaterate || 1000;
+        let timeBias = 0; //hardcoded for now
+        let deadband = config.deadband || 0;
+        let active = config.active;
+        let vartable = config.vartable;
+
+        let status;
+
+        node.getStatus = function getStatus() {
+            return status;
+        };
+
+    }
+    RED.nodes.registerType("opc-da group", OPCDAGroup);
+
+
+    // ---------- OPC-DA In ----------
+    /**
+     * @param {object} config
+     * @param {string} config.group
+     * @param {string} config.item
+     * @param {string} config.mode
+     * @param {boolean} config.diff
+     */
+    function OPCDAIn(config) {
+        const node = this;
+        RED.nodes.createNode(this, config);
+
+        node.group = RED.nodes.getNode(config.group);
+        if (!node.group) {
+            return node.error(RED._("opc-da.error.missingconfig"));
+        }
+
+        let statusVal;
 
         function sendMsg(data, key, status) {
             if (key === undefined) key = '';
@@ -409,7 +186,7 @@ module.exports = function (RED) {
             };
             statusVal = status !== undefined ? status : data;
             node.send(msg);
-            node.status(generateStatus(node.endpoint.getStatus(), statusVal));
+            node.status(generateStatus(node.group.getStatus(), statusVal));
         }
 
         function onChanged(variable) {
@@ -423,150 +200,105 @@ module.exports = function (RED) {
         }
 
         function onData(data) {
-            sendMsg(data, config.mode == 'single' ? config.variable : '');
+            sendMsg(data, config.mode == 'single' ? config.item : '');
         }
 
         function onDataSelect(data) {
-            onData(data[config.variable]);
+            onData(data[config.item]);
         }
 
-        function onEndpointStatus(s) {
+        function onGroupStatus(s) {
             node.status(generateStatus(s.status, statusVal));
         }
 
-        node.status(generateStatus("connecting", ""));
-
-        node.endpoint.on('__STATUS__', onEndpointStatus);
+        node.group.on('__STATUS__', onGroupStatus);
+        node.status(generateStatus(node.group.getStatus(), statusVal));
 
         if (config.diff) {
             switch (config.mode) {
                 case 'all-split':
-                    node.endpoint.on('__CHANGED__', onChanged);
+                    node.group.on('__CHANGED__', onChanged);
                     break;
                 case 'single':
-                    node.endpoint.on(config.variable, onData);
+                    node.group.on(config.item, onData);
                     break;
                 case 'all':
                 default:
-                    node.endpoint.on('__ALL_CHANGED__', onData);
+                    node.group.on('__ALL_CHANGED__', onData);
             }
         } else {
             switch (config.mode) {
                 case 'all-split':
-                    node.endpoint.on('__ALL__', onDataSplit);
+                    node.group.on('__ALL__', onDataSplit);
                     break;
                 case 'single':
-                    node.endpoint.on('__ALL__', onDataSelect);
+                    node.group.on('__ALL__', onDataSelect);
                     break;
                 case 'all':
                 default:
-                    node.endpoint.on('__ALL__', onData);
+                    node.group.on('__ALL__', onData);
             }
         }
 
         node.on('close', function (done) {
-            node.endpoint.removeListener('__ALL__', onDataSelect);
-            node.endpoint.removeListener('__ALL__', onDataSplit);
-            node.endpoint.removeListener('__ALL__', onData);
-            node.endpoint.removeListener('__ALL_CHANGED__', onData);
-            node.endpoint.removeListener('__CHANGED__', onChanged);
-            node.endpoint.removeListener('__STATUS__', onEndpointStatus);
-            node.endpoint.removeListener(config.variable, onData);
+            node.group.removeListener('__ALL__', onDataSelect);
+            node.group.removeListener('__ALL__', onDataSplit);
+            node.group.removeListener('__ALL__', onData);
+            node.group.removeListener('__ALL_CHANGED__', onData);
+            node.group.removeListener('__CHANGED__', onChanged);
+            node.group.removeListener('__STATUS__', onGroupStatus);
+            node.group.removeListener(config.item, onData);
             done();
         });
     }
     RED.nodes.registerType("opc-da in", OPCDAIn);
 
-    // ---------- OPC-DA Out ----------
 
+    // ---------- OPC-DA Out ----------
+    /**
+     * 
+     * @param {object} config
+     * @param {string} config.group
+     * @param {string} config.item
+     */
     function OPCDAOut(config) {
-        var node = this;
-        var statusVal;
+        const node = this;
         RED.nodes.createNode(this, config);
 
-        node.endpoint = RED.nodes.getNode(config.endpoint);
-        if (!node.endpoint) {
+        node.group = RED.nodes.getNode(config.group);
+        if (!node.group) {
             return node.error(RED._("opc-da.error.missingconfig"));
         }
 
-        function onEndpointStatus(s) {
+        let statusVal;
+
+        function onGroupStatus(s) {
             node.status(generateStatus(s.status, statusVal));
         }
 
         function onNewMsg(msg) {
             var writeObj = {
-                name: config.variable || msg.variable,
+                name: config.item || msg.item,
                 val: msg.payload
             };
 
             if (!writeObj.name) return;
 
             statusVal = writeObj.val;
-            node.endpoint.writeVar(writeObj);
-            node.status(generateStatus(node.endpoint.getStatus(), statusVal));
+            node.group.writeVar(writeObj);
+            node.status(generateStatus(node.group.getStatus(), statusVal));
         }
 
-        node.status(generateStatus("connecting", ""));
+        node.status(generateStatus(node.group.getStatus(), statusVal));
 
         node.on('input', onNewMsg);
-        node.endpoint.on('__STATUS__', onEndpointStatus);
+        node.group.on('__STATUS__', onGroupStatus);
 
         node.on('close', function (done) {
-            node.endpoint.removeListener('__STATUS__', onEndpointStatus);
+            node.group.removeListener('__STATUS__', onGroupStatus);
             done();
         });
 
     }
     RED.nodes.registerType("opc-da out", OPCDAOut);
-
-
-    // ---------- OPC-DA Control ----------
-
-    function OPCDAControl(config) {
-        var node = this;
-        var statusVal;
-        RED.nodes.createNode(this, config);
-
-        node.endpoint = RED.nodes.getNode(config.endpoint);
-        if (!node.endpoint) {
-            return node.error(RED._("opc-da.error.missingconfig"));
-        }
-
-        function onEndpointStatus(s) {
-            node.status(generateStatus(s.status, statusVal));
-        }
-
-        function onMessage(msg) {
-            var res;
-            switch (config.function) {
-                case 'cycletime':
-                    res = node.endpoint.updateCycleTime(msg.payload);
-                    if (res) {
-                        node.error(res, msg);
-                    } else {
-                        node.send(msg);
-                    }
-                    break;
-                case 'trigger':
-                    node.endpoint.doCycle();
-                    node.send(msg);
-                    break;
-
-                default:
-                    node.error(RED._("opc-da.error.invalidcontrolfunction", {function: config.function}), msg);
-            }
-        }
-
-        node.status(generateStatus(node.endpoint.getStatus(), statusVal));
-
-        node.on('input', onMessage);
-        node.endpoint.on('__STATUS__', onEndpointStatus);
-
-        node.on('close', function (done) {
-            node.endpoint.removeListener('__STATUS__', onEndpointStatus);
-            done();
-        });
-
-    }
-    RED.nodes.registerType("opc-da control", OPCDAControl);
 };

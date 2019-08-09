@@ -14,419 +14,388 @@
  limitations under the License.
 -->
 
-<script type="text/x-red" data-template-name="opc-da endpoint">
-    <div class="form-row">
-		<ul style="background: #fff; min-width: 600px; margin-bottom: 20px;" id="node-config-opc-da-endpoint-tabs"></ul>
+<!-- ############################################ OPC-DA SERVER ############################################ -->
+
+<script type="text/x-red" data-template-name="opc-da server">
+	<div class="form-row">
+		<label for="node-config-input-address"><i class="fa fa-globe"></i> <span data-i18n="opc-da.server.label.address"></span></label>
+		<input type="text" id="node-config-input-address" data-i18n="[placeholder]opc-da.server.placeholder.address">
 	</div>
-	<div id="node-config-opc-da-endpoint-tabs-content" style="min-height: 170px;">
-		<div id="opc-da-endpoint-tab-connection" style="display:none">
-			<div class="form-row">
-				<label for="node-config-input-address"><i class="fa fa-globe"></i> <span data-i18n="opc-da.endpoint.label.address"></span></label>
-				<input class="input-append-left" type="text" id="node-config-input-address" data-i18n="[placeholder]opc-da.endpoint.label.address" style="width: 40%;">
-				<label for="node-config-input-port" style="margin-left: 10px; width: 35px; "> <span data-i18n="opc-da.endpoint.label.port"></span></label>
-				<input type="text" id="node-config-input-port" data-i18n="[placeholder]opc-da.endpoint.label.port" style="width: 50px">
-			</div>
-            <div class="form-row">
-                <label for="node-config-input-connmode"><i class="fa fa-sliders"></i> <span data-i18n="opc-da.endpoint.label.connmode"></span></label>
-                <select type="text" id="node-config-input-connmode">
-                    <option value="rack-slot" data-i18n="opc-da.endpoint.connmode.rack-slot"></option>
-                    <option value="tsap" data-i18n="opc-da.endpoint.connmode.tsap"></option>
-                </select>
-            </div>
-			<div class="form-row" id="node-config-opc-da-endpoint-mode-rackslot">
-				<label for="node-config-input-rack"><i class="fa fa-sitemap"></i> <span data-i18n="opc-da.endpoint.label.rack"></span></label>
-				<input class="input-append-left" type="text" id="node-config-input-rack" data-i18n="[placeholder]opc-da.endpoint.label.rack" style="width: 50px">
-				<label for="node-config-input-slot" style="margin-left: 10px; width: 35px; "> <span data-i18n="opc-da.endpoint.label.slot"></span></label>
-				<input type="text" id="node-config-input-slot" data-i18n="[placeholder]opc-da.endpoint.label.slot" style="width:50px">
-			</div>
-			<div class="form-row" id="node-config-opc-da-endpoint-mode-tsap">
-				<label for="node-config-input-localtsaphi"><i class="fa fa-exchange"></i> <span data-i18n="opc-da.endpoint.label.tsap-local"></span></label>
-				<input class="input-append-left" type="text" id="node-config-input-localtsaphi" style="width: 35px"><span><b>.</b></span>
-				<input class="input-append-left" type="text" id="node-config-input-localtsaplo" style="width: 35px">
-				<label for="node-config-input-remotetsaphi" style="margin-left: 10px"> <span data-i18n="opc-da.endpoint.label.tsap-remote"></span></label>
-				<input class="input-append-left" type="text" id="node-config-input-remotetsaphi" style="width: 35px"><span><b>.</b></span>
-				<input class="input-append-left" type="text" id="node-config-input-remotetsaplo" style="width: 35px">
-			</div>
-			<div class="form-row">
-				<label for="node-config-input-cycletime"><i class="fa fa-refresh"></i> <span data-i18n="opc-da.endpoint.label.cycletime"></span></label>
-				<input type="text" id="node-config-input-cycletime" data-i18n="[placeholder]opc-da.endpoint.label.cycletime" style="width: 60px;"> <span>ms</span>
-			</div>
-			<div class="form-row">
-				<label for="node-config-input-timeout"><i class="fa fa-clock-o"></i> <span data-i18n="opc-da.endpoint.label.timeout"></span></label>
-				<input type="text" id="node-config-input-timeout" data-i18n="[placeholder]opc-da.endpoint.label.timeout" style="width: 60px;"> <span>ms</span>
-			</div>
-            <div class="form-row">
-				<label for="node-config-input-verbose"><i class="fa fa-comment"></i> <span data-i18n="opc-da.endpoint.label.verbose"></span></label>
-				<select type="text" id="node-config-input-verbose">
-					<option value="default" data-i18n="opc-da.endpoint.verbose.default"></option>
-					<option value="on" data-i18n="opc-da.endpoint.verbose.on"></option>
-					<option value="off" data-i18n="opc-da.endpoint.verbose.off"></option>                 
-				</select>
-			</div>
-			<div class="form-row">
-				<label for="node-config-input-name"><i class="fa fa-tag"></i> <span data-i18n="opc-da.label.name"></span></label>
-				<input type="text" id="node-config-input-name" data-i18n="[placeholder]opc-da.label.name">
-			</div>
-		</div>
-		<div id="opc-da-endpoint-tab-variables" style="display:none">
-			<div class="form-row" style="margin-bottom:0;">
-				<label><i class="fa fa-list"></i> <span data-i18n="opc-da.endpoint.label.variables.list"></span></label>
-			</div>
-			<div class="form-row node-input-variables-container-row" style="margin-bottom: 0px;">
-				<div id="node-config-input-variables-container-div" style="box-sizing: border-box; border-radius: 5px; height: 300px; padding: 5px; border: 1px solid #ccc; overflow-y:scroll;">
-					<ol id="node-config-input-variables-container" style=" list-style-type:none; margin: 0;"></ol>
-				</div>
-			</div>
-			<div class="form-row">
-				<a href="#" class="editor-button editor-button-small" id="node-config-opc-da-endpoint-var-export" style="margin: 4px; float: right"><i class="fa fa-download"></i> <span data-i18n="opc-da.endpoint.label.variables.export"></span></a>
-				<input type="file" id="node-config-opc-da-endpoint-var-import" style="display: none"/>
-				<a href="#" class="editor-button editor-button-small" id="node-config-opc-da-endpoint-var-import-btn" style="margin: 4px; float: right"><i class="fa fa-upload"></i> <span data-i18n="opc-da.endpoint.label.variables.import"></span></a>
-				<a href="#" class="editor-button editor-button-small" id="node-config-input-add-variable" style="margin: 4px;"><i class="fa fa-plus"></i> <span data-i18n="opc-da.endpoint.label.variables.add"></span></a>
-				<a href="#" class="editor-button editor-button-small" id="node-config-opc-da-endpoint-var-clean" style="margin: 4px;"><i class="fa fa-trash-o"></i> <span data-i18n="opc-da.endpoint.label.variables.clean"></span></a>
-			</div>
-			<!--<input type="hidden" id="node-config-input-vartable">-->
+	<div class="form-row">
+		<label for="node-config-input-domain"><i class="fa fa-sitemap"></i> <span data-i18n="opc-da.server.label.domain"></span></label>
+		<input type="text" id="node-config-input-domain" data-i18n="[placeholder]opc-da.server.label.domain">
+	</div>
+	<div class="form-row">
+		<label for="node-config-input-username"><i class="fa fa-user"></i> <span data-i18n="opc-da.server.label.username"></span></label>
+		<input type="text" id="node-config-input-username" data-i18n="[placeholder]opc-da.server.label.username">
+	</div>
+	<div class="form-row">
+		<label for="node-config-input-password"><i class="fa fa-lock"></i> <span data-i18n="opc-da.server.label.password"></span></label>
+		<input type="password" id="node-config-input-password" data-i18n="[placeholder]opc-da.server.label.password">
+	</div>
+	<div class="form-row">
+		<label for="node-config-input-progid"><i class="fa fa-window-maximize"></i> <span data-i18n="opc-da.server.label.progid"></span></label>
+		<select type="text" id="node-config-input-progid" style="width: 70%">
+		</select>
+	</div>
+	<div class="form-row">
+		<label for="node-config-input-clsid"><i class="fa fa-code"></i> <span data-i18n="opc-da.server.label.clsid"></span></label>
+		<input type="text" id="node-config-input-clsid" data-i18n="[placeholder]opc-da.server.placeholder.clsid">
+	</div>
+	<div class="form-row">
+		<label for="node-config-input-verbose"><i class="fa fa-comment"></i> <span data-i18n="opc-da.server.label.verbose"></span></label>
+		<select type="text" id="node-config-input-verbose">
+			<option value="default" data-i18n="opc-da.server.verbose.default"></option>
+			<option value="on" data-i18n="opc-da.server.verbose.on"></option>
+			<option value="off" data-i18n="opc-da.server.verbose.off"></option>                 
+		</select>
+	</div>
+	<div class="form-row">
+		<label for="node-config-input-name"><i class="fa fa-tag"></i> <span data-i18n="opc-da.label.name"></span></label>
+		<input type="text" id="node-config-input-name" data-i18n="[placeholder]opc-da.label.name">
+	</div>
+	<div class="form-row">
+		<a href="#" class="editor-button" id="node-config-opc-da-server-test" style="margin: 4px"><i class="fa fa-plug"></i> <span data-i18n="opc-da.server.label.test"></span></a>
+		<span class="form-tips" id="node-config-opc-da-server-rest-result" style="display:none;"></span>
+	</div>
+	<div class="form-row" style="margin-bottom:0;">
+		<label><i class="fa fa-list"></i> <span data-i18n="opc-da.server.label.items"></span></label>
+	</div>
+	<div class="form-row node-config-opc-da-server-items-container-row" style="margin-bottom:0;">
+		<div id="node-config-opc-da-server-items-container" style="min-height: 150px;border: 1px solid #ccc;border-radius: 5px;overflow: scroll;">
+			<ol id="node-config-opc-da-server-items"></ol>
 		</div>
 	</div>
 </script>
 
-<script type="text/x-red" data-help-name="opc-da endpoint">
-	<p>Configures the connection to a PLC</p>
+<script type="text/x-red" data-help-name="opc-da server">
+	<p>Configures the connection to a OPC-DA Server</p>
 
 	<h3>Details</h3>
 	<p>
-		The <b>Mode</b> option selects between <i>Rack/Slot</i> and <i>TSAP</i>
-		connection modes. Usually the <i>Rack/Slot</i> mode is used, except when
-		connecting to Logo devices where the only option is the <i>TSAP</i>
-		method
-	</p>
-	<p>
-		The <b>Cycle time</b> configuration specifies the time interval in which
-		all variables will be read from the PLC. A value of <code>0</code> disables
-		automatic reading, and then a manual triggering is required from the 
-		<i>opc-da control</i> node
-	</p>
-	<p>
-		The <b>Timeout</b> parameter sets the maximum amount of time that the PLC
-		may take to answer our requests. It may be desirable to raise this time if
-		the network is busy of it's latency is high
-	</p>
-	<p>
-		It's possible to log the PLC communication by setting the <b>Debug</b> option
-		to "On" of "Off". By default, the behavior is controlled by the <code>-v</code>
-		command-line parameter when running Node-RED
+		TODO :)
 	</p>
 </script>
 
 <script type="text/javascript">
-	/*! @source http://purl.eligrey.com/github/FileSaver.js/blob/master/FileSaver.js */
-	var saveAs = saveAs || function (e) { "use strict"; if (typeof e === "undefined" || typeof navigator !== "undefined" && /MSIE [1-9]\./.test(navigator.userAgent)) { return } var t = e.document, n = function () { return e.URL || e.webkitURL || e }, r = t.createElementNS("http://www.w3.org/1999/xhtml", "a"), o = "download" in r, a = function (e) { var t = new MouseEvent("click"); e.dispatchEvent(t) }, i = /constructor/i.test(e.HTMLElement) || e.safari, f = /CriOS\/[\d]+/.test(navigator.userAgent), u = function (t) { (e.setImmediate || e.setTimeout)(function () { throw t }, 0) }, s = "application/octet-stream", d = 1e3 * 40, c = function (e) { var t = function () { if (typeof e === "string") { n().revokeObjectURL(e) } else { e.remove() } }; setTimeout(t, d) }, l = function (e, t, n) { t = [].concat(t); var r = t.length; while (r--) { var o = e["on" + t[r]]; if (typeof o === "function") { try { o.call(e, n || e) } catch (a) { u(a) } } } }, p = function (e) { if (/^\s*(?:text\/\S*|application\/xml|\S*\/\S*\+xml)\s*;.*charset\s*=\s*utf-8/i.test(e.type)) { return new Blob([String.fromCharCode(65279), e], { type: e.type }) } return e }, v = function (t, u, d) { if (!d) { t = p(t) } var v = this, w = t.type, m = w === s, y, h = function () { l(v, "writestart progress write writeend".split(" ")) }, S = function () { if ((f || m && i) && e.FileReader) { var r = new FileReader; r.onloadend = function () { var t = f ? r.result : r.result.replace(/^data:[^;]*;/, "data:attachment/file;"); var n = e.open(t, "_blank"); if (!n) e.location.href = t; t = undefined; v.readyState = v.DONE; h() }; r.readAsDataURL(t); v.readyState = v.INIT; return } if (!y) { y = n().createObjectURL(t) } if (m) { e.location.href = y } else { var o = e.open(y, "_blank"); if (!o) { e.location.href = y } } v.readyState = v.DONE; h(); c(y) }; v.readyState = v.INIT; if (o) { y = n().createObjectURL(t); setTimeout(function () { r.href = y; r.download = u; a(r); h(); c(y); v.readyState = v.DONE }); return } S() }, w = v.prototype, m = function (e, t, n) { return new v(e, t || e.name || "download", n) }; if (typeof navigator !== "undefined" && navigator.msSaveOrOpenBlob) { return function (e, t, n) { t = t || e.name || "download"; if (!n) { e = p(e) } return navigator.msSaveOrOpenBlob(e, t) } } w.abort = function () { }; w.readyState = w.INIT = 0; w.WRITING = 1; w.DONE = 2; w.error = w.onwritestart = w.onprogress = w.onwrite = w.onabort = w.onerror = w.onwriteend = null; return m }(typeof self !== "undefined" && self || typeof window !== "undefined" && window || this.content); if (typeof module !== "undefined" && module.exports) { module.exports.saveAs = saveAs } else if (typeof define !== "undefined" && define !== null && define.amd !== null) { define("FileSaver.js", function () { return saveAs }) }
-</script>
 
-<script type="text/javascript">
-
-	RED.nodes.registerType('opc-da endpoint', {
+	RED.nodes.registerType('opc-da server', {
 		category: 'config',
 		defaults: {
-			address: {
+			address: { value: "", required: true },
+			domain: { value: "" },
+			progid: { value: "" },
+			clsid: {
 				value: "",
-				validate: RED.validators.regex(/^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/)
+				validate: RED.validators.regex(/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i)
 			},
-			port: {
-				value: "102",
-				validate: RED.validators.number()
-			},
-			rack: {
-				value: "0",
-				validate: RED.validators.number()
-			},
-			slot: {
-				value: "2",
-				validate: RED.validators.number()
-			},
-			localtsaphi: {
-				value: "01"
-			},
-			localtsaplo: {
-				value: "00"
-			},
-			remotetsaphi: {
-				value: "01"
-			},
-			remotetsaplo: {
-				value: "00"
-			},
-			connmode: {
-				value: "rack-slot"
-			},
-			cycletime: {
-				value: 500
-			},
-			timeout: {
-				value: 1500
-			},
-			verbose: {
-				value: "default"
-			},
-			name: {
-				value: ""
-			},
-			vartable: {
-				value: [{
-					name: "",
-					addr: ""
-				}]
-			}
+			verbose: { value: "default" },
+			name: { value: "" },
+			vartable: { value: [] }
+		},
+		credentials: {
+			username: { type: "text", required: true },
+			password: { type: "password", required: true }
 		},
 		label: function () {
-			return this.name || this.address + ":" + this.port + ":" + (
-				this.connmode == 'tsap' ?
-					(this.localtsaphi + "." + this.localtsaplo + "/" + this.remotetsaphi + "." + this.remotetsaplo) :
-					(this.rack + ":" + this.slot));
+			return this.name || this.address || 'opc-da server';
 		},
 		oneditprepare: function () {
 			var self = this;
-			var labelName = this._("opc-da.endpoint.label.variables.name");
-			var labelAddr = this._("opc-da.endpoint.label.variables.addr");
-			var labelDel = this._("opc-da.endpoint.label.variables.del");
 
-			var connTypeList = $('#node-config-input-connmode');
-			var rackSlotRow = $('#node-config-opc-da-endpoint-mode-rackslot');
-			var tsapRow = $('#node-config-opc-da-endpoint-mode-tsap');
+			var progIdList = [
+				{ clsid: "7904C302-AC19-11D4-9E1E-00105A4AB1C6", progid: "CoDeSys.OPC.02" },
+				{ clsid: "A879768A-7387-11D4-B0D8-009027242C59", progid: "ICONICS.SimulatorOPCDA.2" },
+				{ clsid: "F8582CF2-88FB-11D0-B850-00C0F0104305", progid: "Matrikon.OPC.Simulation.1" },
+				{ clsid: "2E565242-B238-11D3-842D-0008C779D775", progid: "Softing.OPCToolboxDemo_ServerDA.1" }
+			];
 
-			// Prepare tabs
-			var tabs = RED.tabs.create({
-				id: "node-config-opc-da-endpoint-tabs",
-				onchange: function (tab) {
-					$("#node-config-opc-da-endpoint-tabs-content").children().hide();
-					$("#" + tab.id).show();
-				}
+			var progIdField = $('#node-config-input-progid');
+			var clsIdField = $('#node-config-input-clsid');
+
+			var lastClsId = '';
+			var lastProgId = '';
+
+			// progId List
+			$.each(progIdList, function(i, elm) {
+				progIdField.append($('<option/>', {
+					text: elm.progid,
+					value: elm.clsid
+				}));
 			});
-			tabs.addTab({
-				id: "opc-da-endpoint-tab-connection",
-				label: this._("opc-da.endpoint.label.tabs.connection")
-			});
-			tabs.addTab({
-				id: "opc-da-endpoint-tab-variables",
-				label: this._("opc-da.endpoint.label.tabs.variables")
-			});
-			setTimeout(function () {
-				tabs.resize()
-			}, 0);
-
-			function generateVariable(variable) {
-				var container = $('<li/>', {
-					style: "background: #fff; margin:0; padding:8px 0px; border-bottom: 1px solid #ccc;"
-				});
-				var row1 = $('<div/>').appendTo(container);
-
-				var variableAddr = $('<input/>', {
-					style: "width: 110px; margin-right: 10px;",
-					class: "node-config-input-variable-addr",
-					type: "text",
-					placeholder: labelAddr
-				}).appendTo(row1);
-
-				var variableName = $('<input/>', {
-					style: "width: 250px",
-					class: "node-config-input-variable-name",
-					type: "text",
-					placeholder: labelName
-				}).appendTo(row1);
-
-				var finalspan = $('<span/>', {
-					style: "float: right; margin-right: 10px;"
-				}).appendTo(row1);
-				var deleteButton = $('<a/>', {
-					href: "#",
-					class: "editor-button editor-button-small",
-					style: "margin-top: 7px; margin-left: 5px;",
-					title: labelDel
-				}).appendTo(finalspan);
-
-				$('<i/>', {
-					class: "fa fa-remove"
-				}).appendTo(deleteButton);
-
-				deleteButton.click(function () {
-					container.css({
-						"background": "#fee"
-					});
-					container.fadeOut(150, function () {
-						$(this).remove();
-					});
-				});
-
-				//populate data
-				variableAddr.val(variable.addr);
-				variableName.val(variable.name);
-
-				$("#node-config-input-variables-container").append(container);
-			}
-
-			function cleanVarTable() {
-				$("#node-config-input-variables-container").children().remove();
-			}
-
-			function populateVarTable() {
-				if (self.vartable) {
-					if (typeof self.vartable == 'string') {
-						self.vartable = JSON.parse(self.vartable);
+			progIdField.append($('<option/>', {
+				selected: "selected",
+				text: self._("opc-da.server.label.custom"),
+				value: ""
+			}));
+			progIdField.val(self.progid);
+			lastProgId = self.progid;
+			progIdField.change(function () {
+				var curProgId = progIdField.val();
+				var curClsId = clsIdField.val();
+				if (curProgId) {
+					if (!lastProgId) {
+						lastClsId = curClsId;
 					}
-					for (var i = 0; i < self.vartable.length; i++) {
-						generateVariable(self.vartable[i]);
-					}
-				}
-			}
-
-			$("#node-config-input-add-variable").click(function () {
-				generateVariable({
-					name: "",
-					addr: ""
-				});
-			});
-
-			$("#node-config-input-cycletime").spinner({
-				min: 0
-			});
-
-			$("#node-config-input-timeout").spinner({
-				min: 500
-			});
-
-			$("#node-config-opc-da-endpoint-var-clean").click(cleanVarTable);
-
-			populateVarTable();
-
-			// export
-			function exportCSV() {
-				var vars = $("#node-config-input-variables-container").children();
-				var lines = [];
-
-				vars.each(function (i) {
-					var elm = $(this);
-					lines.push([
-						elm.find(".node-config-input-variable-addr").val(), //addr
-						elm.find(".node-config-input-variable-name").val() //name
-					].join(';'));
-				});
-
-				saveAs(new Blob([lines.join('\r\n')]), 'opc-da_endpoint' + (self.name ? '_' + self.name : '') + '.csv');
-			}
-			$('#node-config-opc-da-endpoint-var-export').click(exportCSV);
-
-			// import
-			function importCSV(e) {
-				var file = e.target.files[0];
-				if (!file) {
-					return;
-				}
-				var reader = new FileReader();
-				reader.onload = function (e) {
-					var res = [], i, fields;
-					var contents = e.target.result || '';
-					var lines = contents.split(/[\r\n]+/);
-
-					if (!lines.length) {
-						alert('file is empty!');
-						return;
-					}
-
-					for (i = 0; i < lines.length; i++) {
-
-						lines[i] = lines[i].trim();
-						if (lines[i] == '') continue;
-
-						fields = lines[i].split(/[\t;]/);
-
-						if (fields.length < 2) {
-							alert('line must have at least two parameters, address and name');
-							return;
-						}
-						res.push({
-							addr: fields[0],
-							name: fields[1]
-						});
-					}
-
-					if (res.length) {
-						cleanVarTable();
-						self.vartable = res;
-						populateVarTable();
-					}
-				};
-				reader.readAsText(file);
-			}
-			$('#node-config-opc-da-endpoint-var-import').on('change', importCSV);
-			$('#node-config-opc-da-endpoint-var-import-btn').click(function () {
-				$('#node-config-opc-da-endpoint-var-import').click();
-			})
-
-			//set defaults for old flows
-
-			if (self.connmode === undefined) {
-				console.log('defaults conmode to "rack-slot"');
-				self.connmode = 'rack-slot';
-				self.localtsaphi = "01";
-				self.localtsaplo = "00";
-				self.remotetsaphi = "01";
-				self.remotetsaplo = "00";
-				$("#node-config-input-localtsaphi").val(self.localtsaphi);
-				$("#node-config-input-localtsaplo").val(self.localtsaplo);
-				$("#node-config-input-remotetsaphi").val(self.remotetsaphi);
-				$("#node-config-input-remotetsaplo").val(self.remotetsaplo);
-				connTypeList.val(self.connmode);
-			}
-
-			if (self.timeout === undefined) {
-				console.log('defaults timeout to "1500"');
-				self.timeout = 1500;
-				$("#node-config-input-timeout").val(self.timeout);
-			}
-
-			if (self.verbose === undefined) {
-				console.log('defaults verbose to "default"');
-				self.verbose = 'default';
-				$("#node-config-input-verbose").val(self.verbose);
-			}
-
-			connTypeList.change(function () {
-				if (connTypeList.val() == "rack-slot") {
-					rackSlotRow.show();
-					tsapRow.hide();
-				} else if (connTypeList.val() == "tsap") {
-					rackSlotRow.hide();
-					tsapRow.show();
+					clsIdField.val(curProgId);
+					clsIdField.attr('disabled', 'disabled');
 				} else {
-					rackSlotRow.hide();
-					tsapRow.hide();
+					clsIdField.val(lastClsId);
+					clsIdField.removeAttr('disabled');
 				}
+				clsIdField.change();
+				lastProgId = curProgId
 			});
-			connTypeList.change();
+			progIdField.change();
 
+			// Connection test
+
+			var testBtn = $('#node-config-opc-da-server-test');
+			var testBtnIcon = testBtn.children('i');
+			var testResult = $('#node-config-opc-da-server-rest-result');
+			var itemsList = $('#node-config-opc-da-server-items');
+			function populateItems(items) {
+				$.each(items, function(i, item){
+					$('<li/>').text(item).appendTo(itemsList);
+				});
+			}
+			testBtn.click(function () {
+				if(testBtn.hasClass('disabled')) return;
+
+				testBtn.addClass('disabled').attr('disabled', 'disabled');
+				testBtnIcon.removeClass('fa-plug').addClass('fa-spinner fa-spin fa-fw');
+				testResult.hide();
+				testResult.text('');
+				itemsList.empty();
+
+				var queryData = {
+					address: $('#node-config-input-address').val(),
+					domain: $('#node-config-input-domain').val(),
+					username: $('#node-config-input-username').val(),
+					password: $('#node-config-input-password').val(),
+					clsid: $('#node-config-input-clsid').val()
+				};
+				
+				$.getJSON('/opc-da/browseItems', queryData, function(data, textStatus, jqXHR) {
+					if (jqXHR.status !== 200){
+						testResult.text(jqXHR.status + ': ' + jqXHR.statusText);
+						return;
+					} else if (!data || data.err) {
+						testResult.text(data.err);
+						return;
+					} else {
+						testResult.text('OK! ' + data.items.length + ' items found');
+						populateItems(data.items);
+					}
+				}).fail(function (jqXHR, textStatus, errorThrown){
+					if (jqXHR.status == 0) {
+						testResult.text("No response from Node-RED runtime");
+					} else {
+						testResult.text("Unexpected error:" + textStatus);
+						console.error(jqXHR, textStatus, errorThrown)
+					}
+				}).always(function() {
+					testBtn.removeClass('disabled').removeAttr('disabled');
+					testBtnIcon.removeClass('fa-spinner fa-spin fa-fw').addClass('fa-plug');
+					testResult.show();
+				});
+			});
+
+			populateItems(self.vartable);
 		},
 		oneditsave: function () {
 			var node = this;
-			var vars = $("#node-config-input-variables-container").children();
+			var items = $('#node-config-opc-da-server-items').children('li');
 			node.vartable = [];
 
-			vars.each(function (i) {
-				var elm = $(this);
-				var v = {
-					addr: elm.find(".node-config-input-variable-addr").val(),
-					name: elm.find(".node-config-input-variable-name").val()
-				}
-				node.vartable.push(v);
+			items.each(function (i) {
+				node.vartable.push($(this).text());
 			});
+		},
+		oneditresize: function (size) {
+			var rows = $("#node-config-dialog-edit-form>div:not(.node-config-opc-da-server-items-container-row)");
+			var height = size.height;
+			for (var i = 0; i < rows.size(); i++) {
+				height -= $(rows[i]).outerHeight(true);
+			}
+			var editorRow = $("#node-config-dialog-edit-form>div.node-config-opc-da-server-items-container-row");
+			height -= (parseInt(editorRow.css("marginTop")) + parseInt(editorRow.css("marginBottom")));
+
+			$("#node-config-opc-da-server-items-container").css('height', height + 'px');
 		}
 	});
 </script>
 
-<!-- ######################################################################################## -->
+<!-- ############################################ OPC-DA GROUP ############################################ -->
+
+<script type="text/x-red" data-template-name="opc-da group">
+	<div class="form-row">
+		<label for="node-config-input-server"><i class="fa fa-server"></i> <span data-i18n="opc-da.group.label.server"></span></label>
+		<input type="text" id="node-config-input-server">
+	</div>
+	<div class="form-row">
+		<label for="node-config-input-updaterate"><i class="fa fa-refresh"></i> <span data-i18n="opc-da.group.label.updaterate"></span></label>
+		<input type="text" id="node-config-input-updaterate" style="width: 60px;"> <span>ms</span>
+		<label for="node-config-input-deadband" style="margin-left: 25px;"><i class="fa fa-arrows-h"></i> <span data-i18n="opc-da.group.label.deadband"></span></label>
+		<input type="text" id="node-config-input-deadband" style="width: 60px;"> <span>%</span>
+	</div>
+	<div class="form-row">
+		<label>&nbsp;</label>
+		<input type="checkbox" id="node-config-input-active" style="display: inline-block; width: auto; vertical-align: top;">
+		<label for="node-config-input-active" style="width:70%;"><span data-i18n="opc-da.group.label.active"></span></label>
+	</div>
+	<div class="form-row">
+		<label>&nbsp;</label>
+		<input type="checkbox" id="node-config-input-validate" style="display: inline-block; width: auto; vertical-align: top;">
+		<label for="node-config-input-validate" style="width:70%;"><span data-i18n="opc-da.group.label.validate"></span></label>
+	</div>
+	<div class="form-row">
+		<label for="node-config-input-name"><i class="fa fa-tag"></i> <span data-i18n="opc-da.label.name"></span></label>
+		<input type="text" id="node-config-input-name" data-i18n="[placeholder]opc-da.label.name">
+	</div>
+	<div class="form-row" style="margin-bottom:0;">
+		<label><i class="fa fa-list"></i> <span data-i18n="opc-da.group.label.items"></span></label>
+	</div>
+	<div class="form-row" style="margin-bottom:0;">
+		<input type="text" id="node-config-input-item-add" list="node-config-opc-da-group-items" data-i18n="[placeholder]opc-da.group.placeholder.itemadd">
+		<a href="#" class="editor-button" id="node-config-opc-da-item-add"><i class="fa fa-plus"></i></a>
+		<datalist id="node-config-opc-da-group-items"></datalist>
+	</div>
+	<div class="form-row node-input-items-container-row">
+		<ol id="node-config-input-items-container"></ol>
+	</div>
+</script>
+
+<script type="text/x-red" data-help-name="opc-da group">
+	<p>Configures an OPC-DA Group</p>
+
+	<h3>Details</h3>
+	<p>
+		TODO :)
+	</p>
+</script>
+
+<script type="text/javascript">
+
+	RED.nodes.registerType('opc-da group', {
+		category: 'config',
+		defaults: {
+			server: { type: "opc-da server", required: true },
+			updaterate: { value: 1000 },
+			deadband: { value: 0 },
+			active: { value: true },
+			validate: { value: true },
+			vartable: { value: [] },
+			name: { value: "", required: true }
+		},
+		label: function () {
+			return this.name || 'opc-da group';
+		},
+		oneditprepare: function () {
+			var self = this;
+			var items = [];
+
+			// Spinners
+			$("#node-config-input-updaterate").spinner({
+				min: 50,
+			});
+			$("#node-config-input-deadband").spinner({
+				min: 0,
+				max: 100
+			});
+			if(!self.deadband) {
+				$("#node-config-input-deadband").val(0);
+			}
+
+			// Item list
+			var itemList = $("#node-config-input-items-container").css('min-height', '150px').css('min-width', '450px').editableList({
+				addItem: function (container, i, item) {
+					var row = $('<div/>').css({
+						overflow: 'hidden',
+						whiteSpace: 'nowrap',
+						paddingLeft: '5px'
+					}).appendTo(container);
+
+					var item = $('<span/>').text(item.item).appendTo(row);
+				},
+				addButton: false,
+				removable: true
+			});
+			$.each(self.vartable, function (i, val){
+				itemList.editableList('addItem', {item: val});
+			});
+
+			// Add item handling
+			var addField = $("#node-config-input-item-add");
+			var addBtn = $("#node-config-opc-da-item-add");
+			addBtn.click(function(){
+				var val = addField.val();
+
+				if(!val) return;
+
+				itemList.editableList('addItem', { item: val });
+				addField.val('');
+				addField.focus();
+			});
+			addField.keypress(function (e) {
+				if(e.which == 13) { //enter
+					addBtn.click();
+					return false;
+				}
+			});
+
+			// Datalist handling
+			var addDataList = $("#node-config-opc-da-group-items");
+			var groupInput = $("#node-config-input-server");
+
+			function updateDataList(groupId) {
+				addDataList.empty();
+
+				var groupNode = RED.nodes.node(groupId);
+				if (!groupNode) return;
+				items = groupNode.vartable || [];
+
+				$.each(items, function (i, val) {
+					addDataList.append($('<option/>', {	value: val }));
+				});
+			}
+			groupInput.change(function() {
+				updateDataList(groupInput.val());
+			});
+			updateDataList(self.group);
+
+		},
+		oneditsave: function () {
+			var node = this;
+			
+			var items = $("#node-config-input-items-container").editableList('items');
+			node.vartable = [];
+
+			items.each(function (i) {
+				var v = $(this).find('span').text();
+				node.vartable.push(v);
+			});
+		},
+        oneditresize: function (size) {
+			var rows = $("#node-config-dialog-edit-form>div:not(.node-input-items-container-row)");
+			var height = size.height;
+			for (var i = 0; i < rows.size(); i++) {
+				height -= $(rows[i]).outerHeight(true);
+			}
+			var editorRow = $("#node-config-dialog-edit-form>div.node-input-items-container-row");
+			height -= (parseInt(editorRow.css("marginTop")) + parseInt(editorRow.css("marginBottom")));
+
+			$("#node-config-input-items-container").editableList('height', height);
+		}
+	});
+</script>
+
+<!-- ############################################ OPC-DA IN ############################################ -->
 
 <script type="text/x-red" data-template-name="opc-da in">
 	<div class="form-row">
-		<label for="node-input-endpoint"><i class="fa fa-bolt"></i> <span data-i18n="opc-da.in.label.endpoint"></span></label>
-		<input type="text" id="node-input-endpoint" data-i18n="[placeholder]opc-da.in.label.endpoint">
+		<label for="node-input-group"><i class="fa fa-object-group"></i> <span data-i18n="opc-da.in.label.group"></span></label>
+		<input type="text" id="node-input-group" data-i18n="[placeholder]opc-da.in.label.group">
 	</div>
 	<div class="form-row">
 		<label for="node-input-mode"><i class="fa fa-sliders"></i> <span data-i18n="opc-da.in.label.mode"></span></label>
@@ -437,10 +406,10 @@
 		</select>
 	</div>
 	<div class="form-row opc-da-input-var-row">
-		<label for="node-input-variable"><i class="fa fa-random"></i> <span data-i18n="opc-da.in.label.variable"></span></label>
-		<select type="text" id="node-input-variable">
+		<label for="node-input-item"><i class="fa fa-random"></i> <span data-i18n="opc-da.in.label.item"></span></label>
+		<select type="text" id="node-input-item">
 		</select>
-    <span id="opc-da-custom-var-addr"></span>
+    	<span id="opc-da-custom-var-addr"></span>
 	</div>
 	<div class="form-row">
 		<label>&nbsp;</label>
@@ -454,47 +423,47 @@
 </script>
 
 <script type="text/x-red" data-help-name="opc-da in">
-	<p>Reads data from a OPC-DA Device</p>
+	<p>Reads data from a OPC-DA endpoint</p>
 
 	<h3>Outputs</h3>
 	<dl class="message-properties">
 		<dt>payload<span class="property-type">any</span></dt>
 		<dd>
-			The value(s) as read from the PLC. The format and type of the payload
+			The value(s) as read from the endpoint. The format and type of the payload
 			depends on the configured "Mode"
 		</dd>
 
 		<dt>topic<span class="property-type">string</span></dt>
 		<dd>
-			The name of the variable, when the message refers to a single variable
-			(that is, when mode is "Single Variable" or "All variables, one per
+			The ID of the item, when the message refers to a single item
+			(that is, when mode is "Single item" or "All items, one per
 			message")
 		</dd>
 	</dl>
 	
 	<h3>Details</h3>
 	<p>
-		All data is read cyclically from the PLC as configured in the <i>opc-da endpoint</i>, 
+		All data is read cyclically from the PLC as configured in the <i>opc-da server</i>, 
 		but there are three modes of making it available in a flow:
 	</p>
 	<ul>
 		<li>
-			<b>Single variable:</b> A single variable can be selected from the configured 
-			variables, and a message is sent every cycle, or only when it changes if 
-			<i>diff</i> is checked. <code>msg.payload</code> contains the variable's value
-			and <code>msg.topic</code> has the variable's name.
+			<b>Single item:</b> A single item can be selected from the configured 
+			items, and a message is sent every cycle, or only when it changes if 
+			<i>diff</i> is checked. <code>msg.payload</code> contains the item's value
+			and <code>msg.topic</code> has the item's id.
 		</li>
 		<li>
-			<b>All variables, one per message:</b> Like the <i>Single variable</i> mode, 
-			but for all variables configured. If <i>diff</i> is checked, a message is sent
-			everytime any variable changes. If <i>diff</i> is unchecked, one message is sent 
-			for every variable, in every cycle. Care must be taken about the number of 
+			<b>All items, one per message:</b> Like the <i>Single item</i> mode, 
+			but for all items configured. If <i>diff</i> is checked, a message is sent
+			everytime any item changes. If <i>diff</i> is unchecked, one message is sent 
+			for every item, in every cycle. Care must be taken about the number of 
 			messages per second in this mode.
 		</li>
 		<li>
-			<b>All variables:</b> In this mode, <code>msg.payload</code> contains an object 
-			with all configured variables and their values. If <i>diff</i> is checked, a 
-			message is sent if at least one of the variables changes its value.
+			<b>All items:</b> In this mode, <code>msg.payload</code> contains an object 
+			with all configured items and their values. If <i>diff</i> is checked, a 
+			message is sent if at least one of the items changes its value.
 		</li>
 	</ul>
 </script>
@@ -503,25 +472,13 @@
 	RED.nodes.registerType('opc-da in', {
 		category: 'input',
 		defaults: {
-			endpoint: {
-				value: "",
-				type: "opc-da endpoint",
-				required: true
-			},
-			mode: {
-				value: "single"
-			},
-			variable: {
-				value: ""
-			},
-			diff: {
-				value: true
-			},
-			name: {
-				value: ""
-			}
+			group: { type: "opc-da group", required: true },
+			mode: { value: "single" },
+			item: { value: "" },
+			diff: { value: true },
+			name: { value: "" }
 		},
-		color: "#3FADB5",
+		color: "#7FA3C0",
 		inputs: 0,
 		outputs: 1,
 		icon: "serial.png",
@@ -530,9 +487,9 @@
 
 			if (this.name) return this.name;
 
-			var endpointNode = RED.nodes.node(this.endpoint);
-			if (endpointNode) {
-				return (this.mode == 'single' ? this.variable : null) || endpointNode.label();
+			var groupNode = RED.nodes.node(this.group);
+			if (groupNode) {
+				return (this.mode == 'single' ? this.item : null) || groupNode.label();
 			}
 			return this._("opc-da.in.label.name");
 		},
@@ -542,25 +499,25 @@
 		oneditprepare: function () {
 			var self = this;
 
-			var varList = $('#node-input-variable');
+			var varList = $('#node-input-item');
 			var varAddr = $('#opc-da-custom-var-addr');
 			var modeList = $('#node-input-mode');
-			var endpointList = $("#node-input-endpoint");
+			var groupList = $("#node-input-group");
 			var vars = [];
 
-			function updateVarList(endpointId) {
-				$('#node-input-variable option').remove();
+			function updateVarList(groupId) {
+				$('#node-input-item option').remove();
 
-				var endpointNode = RED.nodes.node(endpointId);
-				if (!endpointNode) return;
-				vars = endpointNode.vartable || [];
+				var groupNode = RED.nodes.node(groupId);
+				if (!groupNode) return;
+				vars = groupNode.vartable || [];
 				if (typeof vars === 'string') vars = JSON.parse(vars);
 
 				varList.append($('<option/>', {
 					disabled: "disabled",
 					selected: "selected",
 					style: "display:none;",
-					text: vars.length ? self._("opc-da.in.label.variable-select") : self._("opc-da.in.label.variable-novar")
+					text: vars.length ? self._("opc-da.in.label.item-select") : self._("opc-da.in.label.item-novar")
 				}));
 
 				$.each(vars, function (i, val) {
@@ -568,8 +525,8 @@
 						value: val.name || val.addr,
 						text: val.name || val.addr
 					}));
-					if (val.name == self.variable) {
-						varList.val(self.variable);
+					if (val.name == self.item) {
+						varList.val(self.item);
 					}
 				});
 			}
@@ -583,10 +540,10 @@
 				});
 			});
 
-			endpointList.change(function () {
-				updateVarList(endpointList.val());
+			groupList.change(function () {
+				updateVarList(groupList.val());
 			});
-			updateVarList(self.endpoint);
+			updateVarList(self.group);
 
 			modeList.change(function () {
 				if (modeList.val() == "single") {
@@ -600,16 +557,16 @@
 	});
 </script>
 
-<!-- ######################################################################################## -->
+<!-- ############################################ OPC-DA OUT ############################################ -->
 
 <script type="text/x-red" data-template-name="opc-da out">
 	<div class="form-row">
-		<label for="node-input-endpoint"><i class="fa fa-bolt"></i> <span data-i18n="opc-da.out.label.endpoint"></span></label>
-		<input type="text" id="node-input-endpoint" data-i18n="[placeholder]opc-da.out.label.endpoint">
+		<label for="node-input-group"><i class="fa fa-bolt"></i> <span data-i18n="opc-da.out.label.group"></span></label>
+		<input type="text" id="node-input-group" data-i18n="[placeholder]opc-da.out.label.group">
 	</div>
 	<div class="form-row opc-da-input-var-row">
-		<label for="node-input-variable"><i class="fa fa-random"></i> <span data-i18n="opc-da.out.label.variable"></span></label>
-		<select type="text" id="node-input-variable">
+		<label for="node-input-item"><i class="fa fa-random"></i> <span data-i18n="opc-da.out.label.item"></span></label>
+		<select type="text" id="node-input-item">
 		</select>
     <span id="opc-da-custom-var-addr"></span>
 	</div>
@@ -637,10 +594,10 @@
 			whenever possible.
 		</dd>
 		
-		<dt>variable<span class="property-type">string</span></dt>
+		<dt>item<span class="property-type">string</span></dt>
 		<dd>
-			the variable to write to on the PLC, according to the variable list
-			on the PLC endpoint. This takes effect <i>only</i> if the "Variable"
+			the item to write to on the PLC, according to the item list
+			on the PLC endpoint. This takes effect <i>only</i> if the "Item"
 			field is left empty on the configuration.
 		</dd>
 	</dl>
@@ -650,19 +607,11 @@
 	RED.nodes.registerType('opc-da out', {
 		category: 'output',
 		defaults: {
-			endpoint: {
-				value: "",
-				type: "opc-da endpoint",
-				required: true
-			},
-			variable: {
-				value: ""
-			},
-			name: {
-				value: ""
-			}
+			group: { type: "opc-da group", required: true },
+			item: { value: "" },
+			name: { value: "" }
 		},
-		color: "#3FADB5",
+		color: "#7FA3C0",
 		inputs: 1,
 		outputs: 0,
 		icon: "serial.png",
@@ -672,9 +621,9 @@
 
 			if (this.name) return this.name;
 
-			var endpointNode = RED.nodes.node(this.endpoint);
-			if (endpointNode) {
-				return this.variable || endpointNode.label();
+			var groupNode = RED.nodes.node(this.group);
+			if (groupNode) {
+				return this.item || groupNode.label();
 			}
 			return this._("opc-da.out.label.name");
 		},
@@ -684,25 +633,25 @@
 		oneditprepare: function () {
 			var self = this;
 
-			var varList = $('#node-input-variable');
+			var varList = $('#node-input-item');
 			var varAddr = $('#opc-da-custom-var-addr')[0];
-			var endpointList = $("#node-input-endpoint");
+			var groupList = $("#node-input-group");
 			var vars = [];
 
-			function updateVarList(endpointId) {
-				$('#node-input-variable option').remove();
+			function updateVarList(groupId) {
+				$('#node-input-item option').remove();
 
 				varList.append($('<option/>', {
 					//disabled: "disabled",
 					selected: "selected",
 					//style: "display:none;",
-					text: self._("opc-da.out.label.variable-select"),
+					text: self._("opc-da.out.label.item-select"),
 					value: ""
 				}));
 
-				var endpointNode = RED.nodes.node(endpointId);
-				if (!endpointNode) return;
-				vars = endpointNode.vartable || [];
+				var groupNode = RED.nodes.node(groupId);
+				if (!groupNode) return;
+				vars = groupNode.vartable || [];
 				if (typeof vars === 'string') vars = JSON.parse(vars);
 
 				$.each(vars, function (i, val) {
@@ -710,8 +659,8 @@
 						value: val.name || val.addr,
 						text: val.name || val.addr
 					}));
-					if (val.name == self.variable) {
-						varList.val(self.variable);
+					if (val.name == self.item) {
+						varList.val(self.item);
 					}
 				});
 			}
@@ -726,100 +675,10 @@
 				});
 			});
 
-			endpointList.change(function () {
-				updateVarList(endpointList.val());
+			groupList.change(function () {
+				updateVarList(groupList.val());
 			});
-			updateVarList(self.endpoint);
-		}
-	});
-</script>
-
-<!-- ######################################################################################## -->
-
-<script type="text/x-red" data-template-name="opc-da control">
-	<div class="form-row">
-		<label for="node-input-endpoint"><i class="fa fa-bolt"></i> <span data-i18n="opc-da.control.label.endpoint"></span></label>
-		<input type="text" id="node-input-endpoint" data-i18n="[placeholder]opc-da.control.label.endpoint">
-	</div>
-	<div class="form-row">
-		<label for="node-input-function"><i class="fa fa-sliders"></i> <span data-i18n="opc-da.control.label.function"></span></label>
-		<select type="text" id="node-input-function">
-			<option value="cycletime" data-i18n="opc-da.control.function.cycletime"></option>
-			<option value="trigger" data-i18n="opc-da.control.function.trigger"></option>
-		</select>
-	</div>
-	<div class="form-row">
-		<label for="node-input-name"><i class="fa fa-tag"></i> <span data-i18n="opc-da.label.name"></span></label>
-		<input type="text" id="node-input-name" data-i18n="[placeholder]opc-da.label.name">
-	</div>
-</script>
-
-<script type="text/x-red" data-help-name="opc-da control">
-	<p>Enables advanced control of the PLC and the connection</p>
-	
-	<h3>Details</h3>
-	<p>The behavior of this node is changed according to the selected function. Each function
-		has its own configuration, expects different parameters in the messages, and sends
-		different messages out
-	</p>
-	<dl class="message-properties">
-		<dt>Cycle Time</dt>
-		<dd>
-			Changes the time interval between each cyclic read 
-			of variables. It expects a message with <code>payload</code> with a 
-			positive number, being the time in milliseconds between each read. A 
-			value of zero disables the cyclic read.
-		</dd>
-
-		<dt>Trigger read</dt>
-		<dd>
-			Manually triggers a read cycle. No message parameters are used and the 
-			same message is sent on the output. Useful when longer cycle times are 
-			used, but an instant feedback is needed (for example after changing a 
-			variable). Note that the <i>opc-da in</i> nodes are still required to read
-			the values of the variables.
-		</dd>
-	</dl>
-</script>
-
-<script type="text/javascript">
-	RED.nodes.registerType('opc-da control', {
-		category: 'advanced',
-		defaults: {
-			endpoint: {
-				value: "",
-				type: "opc-da endpoint",
-				required: true
-			},
-			function: {
-				value: "cycletime",
-				required: true
-			},
-			name: {
-				value: ""
-			}
-		},
-		color: "#3FADB5",
-		inputs: 1,
-		outputs: 1,
-		icon: "serial.png",
-		label: function () {
-			var self = this;
-
-			if (this.name) return this.name;
-
-			var endpointNode = RED.nodes.node(this.endpoint);
-			if (endpointNode) {
-				if (this.function) {
-					return endpointNode.label() + ": " + this._("opc-da.control.function." + this.function);
-				} else {
-					return endpointNode.label()
-				}
-			}
-			return this._("opc-da.control.label.name");
-		},
-		labelStyle: function () {
-			return this.name ? "node_label_italic" : "";
+			updateVarList(self.group);
 		}
 	});
 </script>

@@ -3,77 +3,57 @@
         "in": {
             "label": {
                 "name": "opc-da in",
-                "endpoint": "PLC",
+                "group": "OPC Group",
                 "mode": "Mode",
-                "variable": "Variable",
+                "item": "Item",
                 "diff": "Emit only when value changes (diff)",
-                "variable-select": "Select a variable",
-                "variable-novar": "No variables"
+                "item-select": "Select an item",
+                "item-novar": "No items"
             },
             "mode": {
-                "single": "Single variable",
-                "all-split": "All variables, one per message",
-                "all": "All variables"
+                "single": "Single item",
+                "all-split": "All items, one per message",
+                "all": "All items"
             }
         },
         "out": {
             "label": {
                 "name": "opc-da out",
-                "endpoint": "PLC",
-                "variable": "Variable",
-                "variable-select": "Select a variable"
+                "group": "OPC Group",
+                "item": "Item",
+                "item-select": "Select an item"
             },
-            "disclaimer": "Caution when writing data to production PLCs!"
+            "disclaimer": "Caution when writing data to production systems!"
         },
-        "control": {
+        "group": {
             "label": {
-                "name": "opc-da control",
-                "function": "Function",
-                "endpoint": "PLC"
+                "server": "OPC Server",
+                "updaterate": "Update rate",
+                "deadband": "Deadband",
+                "active": "Active",
+                "validate": "Validate",
+                "items": "Items"
             },
-            "function": {
-                "cycletime": "Cycle time",
-                "trigger": "Trigger read"
+            "placeholder": {
+                "itemadd": "Add a new item"
             }
         },
-        "endpoint": {
+        "server": {
             "label": {
                 "address": "IP Address",
-                "port": "Port",
-                "connmode": "Mode",
-                "rack": "Rack",
-                "slot": "Slot",
-                "tsap-local": "Local TSAP",
-                "tsap-remote": "Remote TSAP",
-                "cycletime": "Cycle time",
-                "timeout": "Timeout",
+                "domain": "Domain",
+                "username": "Username",
+                "password": "Password",
+                "progid": "ProgId",
+                "clsid": "ClsId",
+                "custom": "Custom...",
                 "verbose": "Debug",
-                "tabs": {
-                    "connection": "Connection",
-                    "variables": "Variables"
-                },
-                "variables": {
-                    "list": "Variable list",
-                    "add": "Add",
-                    "clean": "Remove all",
-                    "del": "Remove",
-                    "name": "Name",
-                    "addr": "Address",
-                    "export": "Export",
-                    "import": "Import"
-                }
-
+                "test": "Test and get items",
+                "items": "Server items"
             },
-            "connmode": {
-                "rack-slot": "Rack/Slot",
-                "tsap": "TSAP"
-            },
-            "status": {
-                "online": "online",
-                "badvalues": "failure",
-                "offline": "offline",
-                "unknown": "unknown",
-                "connecting": "connecting"
+            "placeholder": {
+                "address": "IP or FQDN (e.g. dev.example.com)",
+                "clsid": "8A885D04-1CEB-11C9-9FE8-08002B104860"
             },
             "verbose": {
                 "default": "Default (command line)",
@@ -82,37 +62,19 @@
             }
         },
         "label": {
-            "name": "Name",
-            "select": "Select a device"
+            "name": "Name"
         },
         "error": {
-            "onconnect": "Error connecting to PLC: ",
-            "badvalues": "Failure (Bad values)",
-            "missingconfig": "Missing configuration",
-            "noresponse": "No response from PLC, restarting communication",
-            "invalidconntype": "Invalid configuration type \"__connmode__\"",
-            "invalidtsap": "Invalid TSAP configuration",
-            "invalidtimeinterval": "Invalid time interval for cycle time of \"__interval__\"",
-            "invalidcontrolfunction": "Invalid control function \"__function__\""
+            "missingconfig": "Missing configuration"
         },
         "info": {
-            "connect": "Initiating connection to PLC",
-            "disconnect": "Closing connection to PLC",
-            "novars": "No variables configured, skipping cyclic reading",
-            "cycletimetooshort": "Cycle time too short, enforcing minimum of __min__ ms"
         },
-        "addrval": {
-            "MULTCOMMA": "Invalid address with multiple commas",
-            "DB": "Invalid DB address",
-            "MEMAREA": "Invalid memory area type",
-            "MEMAREADB": "Invalid memory area type inside DB",
-            "SUBADDR": "Invalid address offset with multiple dots",
-            "NOBITADDR": "Memory area requires bit address",
-            "NOSTRLEN": "Memory area requires string length",
-            "NUMTYPE": "Bit-offset and/or array size must be a number",
-            "ARRLEN": "Array size must be greater than zero",
-            "STRLEN": "String size must be greater than zero",
-            "BITADDR": "Bit offset must be between 0 and 7"
+        "status": {
+            "online": "online",
+            "badvalues": "failure",
+            "offline": "offline",
+            "unknown": "unknown",
+            "connecting": "connecting"
         }
     }
 }

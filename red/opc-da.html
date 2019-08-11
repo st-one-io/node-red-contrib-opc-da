@@ -257,9 +257,8 @@
 		<label><i class="fa fa-list"></i> <span data-i18n="opc-da.group.label.items"></span></label>
 	</div>
 	<div class="form-row" style="margin-bottom:0;">
-		<input type="text" id="node-config-input-item-add" list="node-config-opc-da-group-items" data-i18n="[placeholder]opc-da.group.placeholder.itemadd">
+		<input type="text" id="node-config-input-item-add" data-i18n="[placeholder]opc-da.group.placeholder.itemadd">
 		<a href="#" class="editor-button" id="node-config-opc-da-item-add"><i class="fa fa-plus"></i></a>
-		<datalist id="node-config-opc-da-group-items"></datalist>
 	</div>
 	<div class="form-row node-input-items-container-row">
 		<ol id="node-config-input-items-container"></ol>
@@ -326,7 +325,11 @@
 			});
 
 			// Add item handling
-			var addField = $("#node-config-input-item-add");
+			var addField = $("#node-config-input-item-add").autocomplete({
+				source: items,
+				autoFocus: true,
+				minLength: 0
+			});
 			var addBtn = $("#node-config-opc-da-item-add");
 			addBtn.click(function(){
 				var val = addField.val();
@@ -343,21 +346,19 @@
 					return false;
 				}
 			});
+			addField.on('focus', function() {
+				addField.autocomplete('search');
+			});
 
 			// Datalist handling
-			var addDataList = $("#node-config-opc-da-group-items");
 			var groupInput = $("#node-config-input-server");
 
 			function updateDataList(groupId) {
-				addDataList.empty();
 
 				var groupNode = RED.nodes.node(groupId);
-				if (!groupNode) return;
-				items = groupNode.vartable || [];
+				items = groupNode && groupNode.vartable || [];
 
-				$.each(items, function (i, val) {
-					addDataList.append($('<option/>', {	value: val }));
-				});
+				addField.autocomplete('option', {source: items});
 			}
 			groupInput.change(function() {
 				updateDataList(groupInput.val());

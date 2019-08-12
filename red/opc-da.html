@@ -56,7 +56,7 @@
 	</div>
 	<div class="form-row">
 		<a href="#" class="editor-button" id="node-config-opc-da-server-test" style="margin: 4px"><i class="fa fa-plug"></i> <span data-i18n="opc-da.server.label.test"></span></a>
-		<span class="form-tips" id="node-config-opc-da-server-rest-result" style="display:none;"></span>
+		<p class="form-tips" id="node-config-opc-da-server-rest-result" style="display:none;"></p>
 	</div>
 	<div class="form-row" style="margin-bottom:0;">
 		<label><i class="fa fa-list"></i> <span data-i18n="opc-da.server.label.items"></span></label>
@@ -83,7 +83,7 @@
 		category: 'config',
 		defaults: {
 			address: { value: "", required: true },
-			domain: { value: "" },
+			domain: { value: "", required: true},
 			progid: { value: "" },
 			clsid: {
 				value: "",
@@ -154,6 +154,7 @@
 			var testBtnIcon = testBtn.children('i');
 			var testResult = $('#node-config-opc-da-server-rest-result');
 			var itemsList = $('#node-config-opc-da-server-items');
+			var itemsListRow = $('.node-config-opc-da-server-items-container-row');
 			function populateItems(items) {
 				$.each(items, function(i, item){
 					$('<li/>').text(item).appendTo(itemsList);
@@ -162,12 +163,6 @@
 			testBtn.click(function () {
 				if(testBtn.hasClass('disabled')) return;
 
-				testBtn.addClass('disabled').attr('disabled', 'disabled');
-				testBtnIcon.removeClass('fa-plug').addClass('fa-spinner fa-spin fa-fw');
-				testResult.hide();
-				testResult.text('');
-				itemsList.empty();
-
 				var queryData = {
 					address: $('#node-config-input-address').val(),
 					domain: $('#node-config-input-domain').val(),
@@ -175,6 +170,15 @@
 					password: $('#node-config-input-password').val(),
 					clsid: $('#node-config-input-clsid').val()
 				};
+
+				if(!queryData.address || !queryData.domain || !queryData.username || !queryData.password || !queryData.clsid) return;
+
+				testBtn.addClass('disabled').attr('disabled', 'disabled');
+				testBtnIcon.removeClass('fa-plug').addClass('fa-spinner fa-spin fa-fw');
+				testResult.hide();
+				testResult.text('');
+				itemsList.empty();
+				itemsListRow.hide();
 				
 				$.getJSON('/opc-da/browseItems', queryData, function(data, textStatus, jqXHR) {
 					if (jqXHR.status !== 200){
@@ -182,10 +186,12 @@
 						return;
 					} else if (!data || data.err) {
 						testResult.text(data.err);
+						console.log("OPC-DA - Error on browseItems", data);
 						return;
 					} else {
-						testResult.text('OK! ' + data.items.length + ' items found');
+						testResult.text(data.items.length + ' items found');
 						populateItems(data.items);
+						itemsListRow.show();
 					}
 				}).fail(function (jqXHR, textStatus, errorThrown){
 					if (jqXHR.status == 0) {

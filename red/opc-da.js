@@ -37,6 +37,7 @@ function equals(a, b) {
 module.exports = function (RED) {
 
     const EventEmitter = require('events').EventEmitter;
+    const opcda = require('opc-da');
 
     function generateStatus(status, val) {
         let obj;
@@ -67,23 +68,21 @@ module.exports = function (RED) {
     RED.httpAdmin.get('/opc-da/browseItems', RED.auth.needsPermission('opc-da.list'), function (req, res) {
         let params = req.query
         
-        // TODO call opc-da and browse all items
+        async function brosweItems() {
+            let {comServer, opcServer} = await opcda.createServer(params.address, params.domain, params.username, params.password, params.clsid);
 
-        setTimeout(() => {
-            let haveErr = Math.random() > 0.6;
-            let obj;
+            let opcBrowser = await opcServer.getBrowser();
+            let items = await opcBrowser.browseAllFlat();
 
-            if(haveErr) {
-                res.json({err: "Invalid credentials"});
-            } else {
-                let items = new Array(Math.floor(Math.random() * 100));
-                for (let i = 0; i < items.length; i++) {
-                    items[i] = 'item' + i;
-                }
+            // TODO - close and cleanup everything
 
-                res.json({items});
-            }
-        }, 500);
+            return items;
+        }
+
+        brosweItems().then(items => res.json({items})).catch(err => {
+            res.json({ err: err.toString() });
+            RED.log.info(err);
+        });
     });
 
     /**

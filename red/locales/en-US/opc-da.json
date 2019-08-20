@@ -2,7 +2,6 @@
     "opc-da": {
         "in": {
             "label": {
-                "name": "opc-da in",
                 "group": "OPC Group",
                 "mode": "Mode",
                 "item": "Item",
@@ -18,7 +17,6 @@
         },
         "out": {
             "label": {
-                "name": "opc-da out",
                 "group": "OPC Group",
                 "item": "Item",
                 "item-select": "Select an item"
@@ -65,7 +63,13 @@
             "name": "Name"
         },
         "error": {
-            "missingconfig": "Missing configuration"
+            "missingconfig": "Missing configuration",
+            "noresponse": "No response from device, restarting communication"
+        },
+        "warn": {
+            "dupgroupname": "Duplicate group name found, skipping group",
+            "noitems": "No items configured on this group",
+            "minupdaterate": "Update rate too low, enforcing minimum of __value__"
         },
         "info": {
         },

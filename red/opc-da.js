@@ -73,8 +73,26 @@ module.exports = function (RED) {
         let params = req.query
 
         async function brosweItems() {
-            //console.log('browseItems', params.address, params.domain, params.username, params.password, params.clsid)
-            let { comServer, opcServer } = await opcda.createServer(params.address, params.domain, params.username, params.password, params.clsid);
+            let self = this;
+            let session = new Session();
+            session = session.createSession(params.domain, params.username, params.password);
+            session.setGlobalSocketTimeout(params.timeout);
+
+            let comServer = new ComServer(new Clsid(params.clsid), params.address, session);
+            
+            comServer.on("disconnected", function(){
+                throw new Error("Disconnected from the server.");
+            });
+            comServer.on("e_classnotreg", function(){
+                throw new Error("The given Clsid is not registered on the server.");
+            });
+
+            await comServer.init();
+            
+            let comObject = await comServer.createInstance();
+    
+            let opcServer = new opcda.OPCServer();
+            await opcServer.init(comObject);
 
             let opcBrowser = await opcServer.getBrowser();
             let items = await opcBrowser.browseAllFlat();
@@ -88,9 +106,11 @@ module.exports = function (RED) {
             return items;
         }
 
-        brosweItems().then(items => res.json({ items })).catch(err => {
-            res.json({ err: err.toString() });
-            RED.log.info(err);
+        brosweItems().then(items => {
+            res.json({ items });
+        }).catch(err => {
+            res.json(errorMessage(err));
+            RED.log.error(errorMessage(err));
         });
     });
 
@@ -116,15 +136,14 @@ module.exports = function (RED) {
             domain: config.domain,
             username: this.credentials.username,
             password: this.credentials.password,
-            clsid: config.clsid
+            clsid: config.clsid,
+            timeout: config.timeout
         };
         let groups = new Map();
         let comSession, comServer, comObject, opcServer;
 
         function onComServerError(e) {
-            //TODO improve this
-            console.log(e);
-            node.error(e && e.stack || e, {});
+            node.error(errorMessage(e));
         }
 
         function updateStatus(newStatus) {
@@ -137,11 +156,25 @@ module.exports = function (RED) {
         async function setup() {
             let comSession = new Session();
             comSession = comSession.createSession(connOpts.domain, connOpts.username, connOpts.password);
+            comSession.setGlobalSocketTimeout(connOpts.timeout);
 
             comServer = new ComServer(new Clsid(connOpts.clsid), connOpts.address, comSession);
             //comServer.on('error', onComServerError);
-            await comServer.init();
+            
+            comServer.on('e_classnotreg', function(){
+                node.error(RED._("opc-da.error.classnotreg"));
+            });
 
+            comServer.on("disconnected", function(){
+                node.error(RED._("opc-da.error.disconnected"));
+            })
+
+            comServer.on("e_accessdenied", function() {
+                node.error(RED._("opc-da.error.accessdenied"));
+            });
+
+            await comServer.init();
+            
             comObject = await comServer.createInstance();
 
             opcServer = new opcda.OPCServer();
@@ -150,7 +183,6 @@ module.exports = function (RED) {
             for (const entry of groups.entries()) {
                 const name = entry[0];
                 const group = entry[1];
-                console.log("ENTRY", entry);
                 let opcGroup = await opcServer.addGroup(name, group.opcConfig);
                 group.updateInstance(opcGroup);
             }
@@ -245,6 +277,7 @@ module.exports = function (RED) {
         let oldItems = {};
         let updateRate = parseInt(config.updaterate);
         let deadband = parseInt(config.deadband);
+        let validate = config.validate;
 
         if (isNaN(updateRate)) {
             updateRate = 1000;
@@ -261,7 +294,7 @@ module.exports = function (RED) {
             deadband: deadband || 0
         }
 
-        /**
+         /**
          * @private
          * @param {OPCGroupStateManager} newGroup
          */
@@ -279,7 +312,7 @@ module.exports = function (RED) {
                 connected = true;
                 readInProgress = false;
                 readDeferred = 0;
-
+                
                 let items = config.vartable || [];
                 if (items.length < 1) {
                     node.warn("opc-da.warn.noitems");
@@ -288,13 +321,14 @@ module.exports = function (RED) {
                 let itemsList = items.map(e => {
                     return { itemID: e.item, clientHandle: clientHandlePtr++ }
                 });
+
                 let resAddItems = await opcItemMgr.add(itemsList);
                 for (let i = 0; i < resAddItems.length; i++) {
                     const resItem = resAddItems[i];
                     const item = itemsList[i];
+
                     if (resItem[0] !== 0) {
-                        //TODO - get cause and I18N
-                        node.error(`Error adding item '${itemsList[i].itemID}': ${resItem[0]}`);
+                        node.error(`Error adding item '${itemsList[i].itemID}': ${errorMessage(resItem[0])}`);
                     } else {
                         serverHandles.push(resItem[1].serverHandle);
                         clientHandles[item.clientHandle] = item.itemID;
@@ -370,7 +404,7 @@ module.exports = function (RED) {
             let changed = false;
             for (const item of values) {
                 const itemID = clientHandles[item.clientHandle];
-
+                
                 if (!itemID) {
                     //TODO - what is the right to do here?
                     node.warn("Server replied with an unknown client handle");
@@ -378,6 +412,7 @@ module.exports = function (RED) {
                 }
 
                 let oldItem = oldItems[itemID];
+                
                 if (!oldItem || oldItem.quality !== item.quality || !equals(oldItem.value, item.value)) {
                     changed = true;
                     node.emit(itemID, item);
@@ -391,9 +426,6 @@ module.exports = function (RED) {
 
         function cycleError(err) {
             readInProgress = false;
-
-            //TODO error handling
-            console.log(err);
             node.error('Error reading items: ' + err && err.stack || err);
         }
 
@@ -448,11 +480,27 @@ module.exports = function (RED) {
         let statusVal;
 
         function sendMsg(data, key, status) {
+            // if there is no data to be sent
+            if (!data) return;
             if (key === undefined) key = '';
 
             let msg;
             if (key === '') { //should be the case when mode == 'all'
-                msg = data;
+                let newData = new Array();
+                for (let key in data) {
+                    newData.push({
+                        errorCode: data[key].errorCode,
+                        value: data[key].value,
+                        quality: data[key].quality,
+                        timestamp: data[key].timestamp,
+                        topic: key
+                    });
+                }
+
+                msg = {
+                    topic: "all",
+                    payload: newData
+                };
             } else {
                 if (data.errorCode !== 0) {
                     //TODO i18n and node status handling
@@ -589,6 +637,69 @@ module.exports = function (RED) {
             done();
         });
 
+    }
+
+    /**
+     * @private
+     * @param {Number} errorCode 
+     */
+    function errorMessage(errorCode) {
+        let msgText;
+        
+        switch(errorCode){
+            case 0x00000005:
+                msgText = "Access denied. Username and/or password might be wrong."
+                break;
+            case 0xC0040006:
+                msgText = "The Items AccessRights do not allow the operation.";
+                break;
+            case 0xC0040004:
+                msgText =  "The server cannot convert the data between the specified format/ requested data type and the canonical data type.";
+                break;
+            case 0xC004000C:
+                msgText = "Duplicate name not allowed.";
+                break;
+            case 0xC0040010: 	
+                msgText = "The server's configuration file is an invalid format.";
+                break;
+            case 0xC0040009: 
+                msgText = "The filter string was not valid";
+                break;
+            case 0xC0040001: 
+                msgText = "The value of the handle is invalid. Note: a client should never pass an invalid handle to a server. If this error occurs, it is due to a programming error in the client or possibly in the server.";
+                break;
+            case 0xC0040008: 
+                msgText = "The item ID doesn't conform to the server's syntax.";
+                break;
+            case 0xC0040203: 
+                msgText = "The passed property ID is not valid for the item.";
+                break;
+            case 0xC0040011: 
+                msgText = "Requested Object (e.g. a public group) was not found.";
+                break;
+            case 0xC0040005: 
+                msgText = "The requested operation cannot be done on a public group.";
+                break;
+            case 0xC004000B: 
+                msgText = "The value was out of range.";
+                break;
+            case 0xC0040007: 
+                msgText = "The item ID is not defined in the server address space (on add or validate) or no longer exists in the server address space (for read or write).";
+                break;
+            case 0xC004000A: 
+                msgText = "The item's access path is not known to the server.";
+                break;
+            case 0x0004000E: 
+                msgText = "A value passed to WRITE was accepted but the output was clamped.";
+                break;
+            case 0x0004000F: 
+                msgText = "The operation cannot be performed because the object is being referenced.";
+                break;
+            case 0x0004000D: 
+                msgText = "The server does not support the requested data rate but will use the closest available rate.";
+                break;
+        }
+        return String(errorCode) + " - " + msgText;
     }
     RED.nodes.registerType("opc-da out", OPCDAOut);
 };

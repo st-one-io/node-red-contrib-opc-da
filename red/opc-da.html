@@ -51,6 +51,10 @@
 		</select>
 	</div>
 	<div class="form-row">
+			<label for="node-config-input-timeout"><i class="fa fa-refresh"></i> <span data-i18n="opc-da.group.label.timeout"></span></label>
+			<input type="text" id="node-config-input-timeout" style="width: 60px;"> <span>ms</span>
+	</div>
+	<div class="form-row">
 		<label for="node-config-input-name"><i class="fa fa-tag"></i> <span data-i18n="opc-da.label.name"></span></label>
 		<input type="text" id="node-config-input-name" data-i18n="[placeholder]opc-da.label.name">
 	</div>
@@ -91,7 +95,8 @@
 			},
 			verbose: { value: "default" },
 			name: { value: "" },
-			vartable: { value: [] }
+			vartable: { value: [] },
+			timeout: { value: 5000}
 		},
 		credentials: {
 			username: { type: "text", required: true },
@@ -115,6 +120,11 @@
 
 			var lastClsId = '';
 			var lastProgId = '';
+
+			// spinners
+			$("#node-config-input-timeout").spinner({
+				min: 1000
+			});
 
 			// progId List
 			$.each(progIdList, function(i, elm) {
@@ -168,7 +178,8 @@
 					domain: $('#node-config-input-domain').val(),
 					username: $('#node-config-input-username').val(),
 					password: $('#node-config-input-password').val(),
-					clsid: $('#node-config-input-clsid').val()
+					clsid: $('#node-config-input-clsid').val(),
+					timeout: $('#node-config-input-timeout').val()
 				};
 
 				if(!queryData.address || !queryData.domain || !queryData.username || !queryData.password || !queryData.clsid) return;
@@ -291,7 +302,7 @@
 			active: { value: true },
 			validate: { value: true },
 			vartable: { value: [] },
-			name: { value: "", required: true }
+			name: { value: "", required: true },
 		},
 		label: function () {
 			return this.name || 'opc-da group';

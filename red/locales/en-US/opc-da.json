@@ -30,7 +30,8 @@
                 "deadband": "Deadband",
                 "active": "Active",
                 "validate": "Validate",
-                "items": "Items"
+                "items": "Items",
+                "timeout": "Timeout"
             },
             "placeholder": {
                 "itemadd": "Add a new item"
@@ -64,7 +65,10 @@
         },
         "error": {
             "missingconfig": "Missing configuration",
-            "noresponse": "No response from device, restarting communication"
+            "noresponse": "No response from device, restarting communication",
+            "disconnected": "Disconnected from the server",
+            "accessdenied": "Access denied. Username and/or password might be wrong",
+            "classnotreg": "The given Clsid is not registered on the server"
         },
         "warn": {
             "dupgroupname": "Duplicate group name found, skipping group",

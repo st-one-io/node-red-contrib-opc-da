@@ -180,11 +180,13 @@ module.exports = function (RED) {
             opcServer = new opcda.OPCServer();
             await opcServer.init(comObject);
 
+            
             for (const entry of groups.entries()) {
                 const name = entry[0];
                 const group = entry[1];
                 let opcGroup = await opcServer.addGroup(name, group.opcConfig);
-                group.updateInstance(opcGroup);
+                console.log("setup for group: " + name);
+                await group.updateInstance(opcGroup);
             }
 
             updateStatus('online');
@@ -300,12 +302,14 @@ module.exports = function (RED) {
          */
         async function setup(newGroup) {
             clearInterval(timer);
-
+            
             try {
                 opcGroupMgr = newGroup;
+                console.log("Crating Item Manager");
                 opcItemMgr = await opcGroupMgr.getItemManager();
+                console.log("Creating SyncIO");
                 opcSyncIo = await opcGroupMgr.getSyncIO();
-
+                
                 clientHandlePtr = 1;
                 clientHandles.length = 0;
                 serverHandles = [];
@@ -346,9 +350,9 @@ module.exports = function (RED) {
                 updateRate = MIN_UPDATE_RATE;
                 node.warn(RED._('opc-da.warn.minupdaterate', { value: updateRate + 'ms' }))
             }
-
+            console.log("setting interval and starting doCycle()");
             timer = setInterval(doCycle, updateRate);
-            doCycle();
+            await doCycle();
         }
 
         async function cleanup() {
@@ -377,13 +381,13 @@ module.exports = function (RED) {
             }
         }
 
-        function doCycle() {
+        async function doCycle() {
             if (connected && !readInProgress) {
                 if (!serverHandles.length) return;
 
                 readInProgress = true;
                 readDeferred = 0;
-                opcSyncIo.read(opcda.constants.opc.dataSource.DEVICE, serverHandles)
+                await opcSyncIo.read(opcda.constants.opc.dataSource.DEVICE, serverHandles)
                     .then(cycleCallback).catch(cycleError);
             } else {
                 readDeferred++;
@@ -396,7 +400,7 @@ module.exports = function (RED) {
 
         function cycleCallback(values) {
             readInProgress = false;
-
+           
             if (readDeferred && connected) {
                 doCycle();
             }
@@ -442,8 +446,9 @@ module.exports = function (RED) {
          * @private
          * @param {OPCGroupStateManager} newOpcGroup
          */
-        node.updateInstance = function updateInstance(newOpcGroup) {
-            cleanup().then(() => setup(newOpcGroup));
+        node.updateInstance = async function updateInstance(newOpcGroup) {
+            await cleanup();
+            await setup(newOpcGroup);
         }
 
         node.on('close', async function (done) {

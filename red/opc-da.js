@@ -403,6 +403,7 @@ module.exports = function (RED) {
            
             if (readDeferred && connected) {
                 doCycle();
+                readDeferred = 0;
             }
 
             let changed = false;

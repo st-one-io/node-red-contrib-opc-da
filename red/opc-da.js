@@ -352,7 +352,7 @@ module.exports = function (RED) {
             }
             console.log("setting interval and starting doCycle()");
             timer = setInterval(doCycle, updateRate);
-            await doCycle();
+            doCycle();
         }
 
         async function cleanup() {
@@ -382,6 +382,7 @@ module.exports = function (RED) {
         }
 
         async function doCycle() {
+            console.log(readDeferred);
             if (connected && !readInProgress) {
                 if (!serverHandles.length) return;
 

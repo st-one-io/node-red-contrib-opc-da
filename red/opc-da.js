@@ -121,6 +121,8 @@ module.exports = function (RED) {
     function OPCDAServer(config) {
         EventEmitter.call(this);
         const node = this;
+        let isOnCleanUp = false;
+        let reconnecting = false;
 
         RED.nodes.createNode(this, config);
 
@@ -144,6 +146,8 @@ module.exports = function (RED) {
 
         function onComServerError(e) {
             node.error(errorMessage(e));
+            node.warn("Trying to reconnect...");
+            //setup().catch(onComServerError);
         }
 
         function updateStatus(newStatus) {
@@ -179,7 +183,6 @@ module.exports = function (RED) {
 
             opcServer = new opcda.OPCServer();
             await opcServer.init(comObject);
-
             
             for (const entry of groups.entries()) {
                 const name = entry[0];
@@ -194,27 +197,43 @@ module.exports = function (RED) {
 
         async function cleanup() {
             try {
+                if (isOnCleanUp) return;
+                
+                isOnCleanUp = true;
                 //cleanup groups first
                 for (const group of groups.values()) {
-                    await group.cleanup();
+                    await group.cleanUp();
                 }
 
                 if (opcServer) {
                     await opcServer.end();
                     opcServer = null;
                 }
-                if (comServer) {
-                    await comServer.closeStub();
+                if (comSession) {
+                    await comSession.destroySession();
                     comServer = null;
                 }
+                isOnCleanUp = false;
             } catch (e) {
                 //TODO I18N
+                isOnCleanUp = false;
                 let err = e && e.stack || e;
                 console.log(e);
                 node.error("Error cleaning up server: " + err, { error: err });
             }
 
             updateStatus('unknown');
+        }
+
+        node.reConnect = async function reConnect() {
+            /* if reconnect was already called, do nothing
+               if reconnect was never called, try to restart the session */
+            if (!reconnecting) {
+                reconnecting = true;
+                await cleanup();
+                await setup().catch(onComServerError);
+                reconnecting = false
+            }
         }
 
         node.getStatus = function getStatus() {
@@ -327,6 +346,7 @@ module.exports = function (RED) {
                 });
 
                 let resAddItems = await opcItemMgr.add(itemsList);
+               
                 for (let i = 0; i < resAddItems.length; i++) {
                     const resItem = resAddItems[i];
                     const item = itemsList[i];
@@ -382,7 +402,6 @@ module.exports = function (RED) {
         }
 
         async function doCycle() {
-            console.log(readDeferred);
             if (connected && !readInProgress) {
                 if (!serverHandles.length) return;
 
@@ -394,7 +413,11 @@ module.exports = function (RED) {
                 readDeferred++;
                 if (readDeferred > 10) {
                     node.warn(RED._("opc-da.error.noresponse"), {});
-                    //TODO - reset communication?
+                    // destroy the current group connections
+                    cleanup();
+                    // since we have no good way to know if there is a network problem
+                    // or if something else happened, restart the whole thing
+                    node.server.reConnect();
                 }
             }
         }
@@ -443,6 +466,10 @@ module.exports = function (RED) {
         node.getStatus = function getStatus() {
             return status;
         };
+
+        node.cleanUp = async function cleanUp() {
+            await cleanup();
+        }
 
         /**
          * @private

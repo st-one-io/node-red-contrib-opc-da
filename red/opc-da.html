@@ -73,11 +73,28 @@
 </script>
 
 <script type="text/x-red" data-help-name="opc-da server">
-	<p>Configures the connection to a OPC-DA Server</p>
+	<p>
+		Configures the connection to a OPC-DA Server.
+	</p>
 
 	<h3>Details</h3>
 	<p>
-		TODO :)
+		The <b>ProgId</b> selection list has a few program
+		Ids saved. Program Ids are names used by windows to 
+		identify applications (besides their classID). If your
+		application is not listed this shoud be set to <b>Custom...</b>.
+	</p>
+
+	<p>
+		The <b>Clsid</b> field identifies an object available on a COM server. If
+		some ProgId was previously selected this will be filled by itself, otherwise
+		you should type a proper Clsid.
+	</p>
+
+	<p>
+		Once everything is configured you can optionally click the <b> Test and get items</b>
+		buttom. This will test the given configurations and connection by browsing the server
+		for a list of all available items.
 	</p>
 </script>
 
@@ -262,11 +279,6 @@
 		<label for="node-config-input-active" style="width:70%;"><span data-i18n="opc-da.group.label.active"></span></label>
 	</div>
 	<div class="form-row">
-		<label>&nbsp;</label>
-		<input type="checkbox" id="node-config-input-validate" style="display: inline-block; width: auto; vertical-align: top;">
-		<label for="node-config-input-validate" style="width:70%;"><span data-i18n="opc-da.group.label.validate"></span></label>
-	</div>
-	<div class="form-row">
 		<label for="node-config-input-name"><i class="fa fa-tag"></i> <span data-i18n="opc-da.label.name"></span></label>
 		<input type="text" id="node-config-input-name" data-i18n="[placeholder]opc-da.label.name">
 	</div>
@@ -283,11 +295,32 @@
 </script>
 
 <script type="text/x-red" data-help-name="opc-da group">
-	<p>Configures an OPC-DA Group</p>
+	<p>
+		Configures an OPC-DA Group. To request values form items through OPC-DA 
+		you need to create a group which will have a list of itens to request 
+		the server. The first thing to do is to select a server you previously
+		created.
+	</p>
 
 	<h3>Details</h3>
 	<p>
-		TODO :)
+		The <b>Update rate</b> option allows your to define the time interval 
+		between requests made to the server. Be aware that doing request at a 
+		faster rate than your network can respond to will cause a lot of timeouts.
+	</p>
+
+	<p>
+		The <b>Active</b> option activate or deactive the current group. Inactive groups 
+		will not send requests but they are not deleted so their configuration nodes will
+		still exist.
+	</p>
+
+	<p>
+		To add <b>Items</b> to your group you can type their name (if you already know it)
+		and click the plus buttom. If you don't know the exact name or want to see a list of
+		items available in the server you should first go to the server tab, click the buttom
+		<b>Test and get items</b>. After that when you click on the items field a list of names
+		can be used to select which ones to add.
 	</p>
 </script>
 

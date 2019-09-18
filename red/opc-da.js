@@ -196,23 +196,27 @@ module.exports = function (RED) {
         }
 
         async function cleanup() {
+            console.log("asdfasdfasdfasdf");
             try {
                 if (isOnCleanUp) return;
-                
+                console.log("Cleaning Up");
                 isOnCleanUp = true;
                 //cleanup groups first
+                console.log("Cleaning groups...");
                 for (const group of groups.values()) {
                     await group.cleanUp();
                 }
-
+                console.log("Cleaned Groups");
                 if (opcServer) {
                     await opcServer.end();
                     opcServer = null;
                 }
+                console.log("Cleaned opcServer");
                 if (comSession) {
                     await comSession.destroySession();
                     comServer = null;
                 }
+                console.log("Cleaned session. Finished.");
                 isOnCleanUp = false;
             } catch (e) {
                 //TODO I18N
@@ -324,9 +328,7 @@ module.exports = function (RED) {
             
             try {
                 opcGroupMgr = newGroup;
-                console.log("Crating Item Manager");
                 opcItemMgr = await opcGroupMgr.getItemManager();
-                console.log("Creating SyncIO");
                 opcSyncIo = await opcGroupMgr.getSyncIO();
                 
                 clientHandlePtr = 1;
@@ -370,9 +372,11 @@ module.exports = function (RED) {
                 updateRate = MIN_UPDATE_RATE;
                 node.warn(RED._('opc-da.warn.minupdaterate', { value: updateRate + 'ms' }))
             }
-            console.log("setting interval and starting doCycle()");
-            timer = setInterval(doCycle, updateRate);
-            doCycle();
+
+            if (config.active) {
+                timer = setInterval(doCycle, updateRate);
+                doCycle();
+            }
         }
 
         async function cleanup() {
@@ -384,14 +388,19 @@ module.exports = function (RED) {
             try {
                 if (opcSyncIo) {
                     await opcSyncIo.end();
+                    console.log("GroupCLeanup - opcSync");
                     opcSyncIo = null;
                 }
+                
                 if (opcItemMgr) {
                     await opcItemMgr.end();
+                    console.log("GroupCLeanup - opcItemMgr");
                     opcItemMgr = null;
                 }
+                
                 if (opcGroupMgr) {
                     await opcGroupMgr.end();
+                    console.log("GroupCLeanup - opcGroupMgr");
                     opcGroupMgr = null;
                 }
             } catch (e) {
@@ -413,8 +422,7 @@ module.exports = function (RED) {
                 readDeferred++;
                 if (readDeferred > 10) {
                     node.warn(RED._("opc-da.error.noresponse"), {});
-                    // destroy the current group connections
-                    cleanup();
+                    clearInterval(timer);
                     // since we have no good way to know if there is a network problem
                     // or if something else happened, restart the whole thing
                     node.server.reConnect();
@@ -483,6 +491,7 @@ module.exports = function (RED) {
         node.on('close', async function (done) {
             node.server.unregisterGroup(this);
             await cleanup();
+            console.log("group cleaned");
             done();
         });
         let err = node.server.registerGroup(this);

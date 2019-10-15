@@ -1,41 +1,45 @@
 # node-red-contrib-opc-da
 
-A Node-RED node to talk to automation devices using the OPC-DA protocol
+node-com is a partial DCOM-compatible lib for Node.js environment. Most of the implementation do not follow the official specification so not all the protocol features are supported. This was implemented as a part of our OPC-DA node for Node-RED so features were implemented as they were needed for what we wanted to achieve with that node. The overall architecture has heavly based on the J-Interop project.
 
-This node was created by [Smart-Tech](https://netsmarttech.com) as part of the [ST-One](https://netsmarttech.com/page/st-one) project.
+## Table of Contents
 
-## Work in Progress!
+- [Install](#install)
+- [Usage]()
+  - [Creating a Server](#creating-a-server)
+  - [Creating a Group](#creating-a-group)
+  - [Adding Items to a Group](#adding-items-to-a-group)
+- [Contributing](#contributing)
 
-This is a work in progress!
-
-<!--
 ## Install
 
-You can install this node directly from the "Manage Palette" menu in the Node-RED interface. There are no external dependencies or compilation steps.
+Using npm:
 
-Alternatively, run the following command in your Node-RED user directory - typically `~/.node-red` on Linux or `%HOMEPATH%\.nodered` on Windows
+```bash
+npm install node-red-contrib-opc-da
+```
 
-        npm install node-red-contrib-opc-da
+## Creating a Server
 
-## Usage
+To create a server you will need a few information about your target server: the IP address, the domain name, a username with enough privilege to remotely interact with the OPC Server, this users's password, and a [CLSID](https://docs.microsoft.com/en-us/windows/win32/com/clsid). We ship this node with a few known [ProgIds](https://docs.microsoft.com/en-us/windows/win32/com/-progid--key), which will fill the CLSID field with the correct string. If you have one or more applications that you think could be included on the default options feel free to open an issue with your suggestion. In case your server ProgId is not listed, you can choose the ```Custom``` options and type it by hand.
 
-Each connection to a PLC is represented by the **S7 Endpoint** configuration node. You can configure the PLC's Address, the variables available and their addresses, and the cycle time for reading the variables.
+![](/home/steuck/Projetos/OPC-DA/node-red-contrib-opc-da/images/createserver.png)
 
-The **S7 In** node makes the variable's values available in a flow in three different modes:
+You should also pay attention to the timeout value to make sure it is compatible with the characteristics of your network. If this value is too low, the server might not even be created, and if does other problems related to timeouts might arise. Finally, if you want to test your configuration click the ```Test and get Items``` button. This button will connect to the server, authenticate, and will browse for a full list of available items.
 
-*   **Single variable:** A single variable can be selected from the configured variables, and a message is sent every cycle, or only when it changes if _diff_ is checked. `msg.payload` contains the variable's value and `msg.topic` has the variable's name.
-*   **All variables, one per message:** Like the _Single variable_ mode, but for all variables configured. If _diff_ is checked, a message is sent everytime any variable changes. If _diff_ is unchecked, one message is sent for every variable, in every cycle. Care must be taken about the number of messages per second in this mode.
-*   **All variables:** In this mode, `msg.payload` contains an object with all configured variables and their values. If _diff_ is checked, a message is sent if at least one of the variables changes its value.
+## Creating a Group
 
+Once your server was created you'll have to create a group. For a group to be created you must first select a server you previously created. The update rate defines how frequent the server will be queried for the items added to this group. You can also use the ```Active``` option to activate or deactivate your groups. For now, the ```Deadband``` feature is not fully implemented so you don't need to bother with it.
 
-## Wishlist
-- Perform data type validation on the variables list, preventing errors on the runtime
+![](/home/steuck/Projetos/OPC-DA/node-red-contrib-opc-da/images/creategroups.png)
 
-## Bugs and enhancements
+## Adding Items to a Group
 
-Please share your ideas and experiences on the [Node-RED forum](https://discourse.nodered.org/), or open an issue on the [page of the project on GitHub](https://github.com/netsmarttech/node-red-contrib-s7)
+To add Items to a group, you can type the item name as it is stored at the server and click the ```+``` button. In case you are not sure which items are available on your server, return to the OPC Server configuration tab and click the ```Test and get Items``` button since it will browse and return a list of full available items, allowing you to add from a list here.
 
--->
+| ![](/home/steuck/Projetos/OPC-DA/node-red-contrib-opc-da/images/additem01.png) | ![](/home/steuck/Projetos/OPC-DA/node-red-contrib-opc-da/images/additem02.png) |
+| :----------------------------------------------------------: | ------------------------------------------------------------ |
+|                                                              |                                                              |
+## Contributing
 
-## License
-Copyright 2019 Smart-Tech, [Apache 2.0 license](LICENSE).
+This is a partial implementation and there are lots that could be done to improve what is already supported or to add support for more DCOM features. Feel free to dive in! Open an issue or submit PRs.

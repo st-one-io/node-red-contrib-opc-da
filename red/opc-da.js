@@ -147,7 +147,9 @@ module.exports = function (RED) {
         function onComServerError(e) {
             node.error(errorMessage(e));
             node.warn("Trying to reconnect...");
-            //setup().catch(onComServerError);
+            //node.reConnect();
+            //await.cleanUp();
+            setup().catch(onComServerError);
         }
 
         function updateStatus(newStatus) {
@@ -165,12 +167,13 @@ module.exports = function (RED) {
             comServer = new ComServer(new Clsid(connOpts.clsid), connOpts.address, comSession);
             //comServer.on('error', onComServerError);
             
+            let self = this;
             comServer.on('e_classnotreg', function(){
                 node.error(RED._("opc-da.error.classnotreg"));
             });
 
             comServer.on("disconnected", function(){
-                node.error(RED._("opc-da.error.disconnected"));
+                onComServerError(RED._("opc-da.error.disconnected"));
             })
 
             comServer.on("e_accessdenied", function() {
@@ -196,7 +199,6 @@ module.exports = function (RED) {
         }
 
         async function cleanup() {
-            console.log("asdfasdfasdfasdf");
             try {
                 if (isOnCleanUp) return;
                 console.log("Cleaning Up");
@@ -233,6 +235,7 @@ module.exports = function (RED) {
             /* if reconnect was already called, do nothing
                if reconnect was never called, try to restart the session */
             if (!reconnecting) {
+                console.log("cleaning up");
                 reconnecting = true;
                 await cleanup();
                 await setup().catch(onComServerError);
@@ -420,7 +423,7 @@ module.exports = function (RED) {
                     .then(cycleCallback).catch(cycleError);
             } else {
                 readDeferred++;
-                if (readDeferred > 10) {
+                if (readDeferred > 15) {
                     node.warn(RED._("opc-da.error.noresponse"), {});
                     clearInterval(timer);
                     // since we have no good way to know if there is a network problem

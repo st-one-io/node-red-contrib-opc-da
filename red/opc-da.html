@@ -208,7 +208,7 @@
 				itemsList.empty();
 				itemsListRow.hide();
 				
-				$.getJSON('/opc-da/browseItems', queryData, function(data, textStatus, jqXHR) {
+				$.getJSON('opc-da/browseItems', queryData, function(data, textStatus, jqXHR) {
 					if (jqXHR.status !== 200){
 						testResult.text(jqXHR.status + ': ' + jqXHR.statusText);
 						return;

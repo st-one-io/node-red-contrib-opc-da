@@ -1,6 +1,6 @@
 # node-red-contrib-opc-da
 
-node-com is a partial DCOM-compatible lib for Node.js environment. Most of the implementation do not follow the official specification so not all the protocol features are supported. This was implemented as a part of our OPC-DA node for Node-RED so features were implemented as they were needed for what we wanted to achieve with that node. The overall architecture has heavly based on the J-Interop project.
+node-com-contrib-opc-da is an OPC-DA compatible node for Node-RED that allow interaction with remote OPC-DA servers. Currently only reading and browsing operations are supported.
 
 ## Table of Contents
 

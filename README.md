@@ -1,6 +1,6 @@
 # node-red-contrib-opc-da
 
-node-com-contrib-opc-da is an OPC-DA compatible node for Node-RED that allow interaction with remote OPC-DA servers. Currently only reading and browsing operations are supported.
+node-red-contrib-opc-da is an OPC-DA compatible node for Node-RED that allow interaction with remote OPC-DA servers. Currently only reading and browsing operations are supported.
 
 ## Table of Contents
 

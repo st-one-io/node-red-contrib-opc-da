@@ -39,7 +39,7 @@ const MIN_UPDATE_RATE = 100;
 module.exports = function (RED) {
 
     const EventEmitter = require('events').EventEmitter;
-    const opcda = require('opc-da');
+    const opcda = require('node-opc-da');
     const { OPCGroupStateManager, OPCItemManager, OPCSyncIO } = opcda;
     const { ComServer, Session, Clsid } = opcda.dcom;
 
@@ -69,7 +69,7 @@ module.exports = function (RED) {
         return obj;
     }
 
-    RED.httpAdmin.get('/opc-da/browseItems', RED.auth.needsPermission('opc-da.list'), function (req, res) {
+    RED.httpAdmin.get('/opc-da/browseItems', RED.auth.needsPermission('node-opc-da.list'), function (req, res) {
         let params = req.query
 
         async function brosweItems() {
@@ -256,7 +256,7 @@ module.exports = function (RED) {
 
         node.registerGroup = function registerGroup(group) {
             if (groups.has(group.config.name)) {
-                return RED._('opc-da.warn.dupgroupname');
+                return RED._('node-opc-da.warn.dupgroupname');
             }
 
             groups.set(group.config.name, group);
@@ -383,7 +383,7 @@ module.exports = function (RED) {
             // we may support adding items at a later time
             if (updateRate < MIN_UPDATE_RATE) {
                 updateRate = MIN_UPDATE_RATE;
-                node.warn(RED._('opc-da.warn.minupdaterate', { value: updateRate + 'ms' }))
+                node.warn(RED._('node-opc-da.warn.minupdaterate', { value: updateRate + 'ms' }))
             }
 
             if (config.active) {

@@ -123,7 +123,7 @@ module.exports = function (RED) {
         const node = this;
         let isOnCleanUp = false;
         let reconnecting = false;
-
+        
         RED.nodes.createNode(this, config);
 
         if (!this.credentials) {
@@ -144,12 +144,12 @@ module.exports = function (RED) {
         let groups = new Map();
         let comSession, comServer, comObject, opcServer;
 
-        function onComServerError(e) {
+        async function onComServerError(e) {
             node.error(errorMessage(e));
             node.warn("Trying to reconnect...");
             //node.reConnect();
             //await.cleanUp();
-            setup().catch(onComServerError);
+            await setup().catch(onComServerError);
         }
 
         function updateStatus(newStatus) {
@@ -206,11 +206,11 @@ module.exports = function (RED) {
                 //cleanup groups first
                 console.log("Cleaning groups...");
                 for (const group of groups.values()) {
-                    await group.cleanUp();
+                    //await group.cleanUp();
                 }
                 console.log("Cleaned Groups");
                 if (opcServer) {
-                    await opcServer.end();
+                    //await opcServer.end();
                     opcServer = null;
                 }
                 console.log("Cleaned opcServer");
@@ -241,6 +241,13 @@ module.exports = function (RED) {
                 await setup().catch(onComServerError);
                 reconnecting = false
             }
+        }
+
+        node.createGroup = async function createGroup(group) {
+            console.log(group.config);
+            let opcGroup = await opcServer.addGroup(group.config.name, group.config);
+            console.log("setup for group: " + group.config.name);
+            await group.updateInstance(opcGroup);
         }
 
         node.getStatus = function getStatus() {
@@ -283,12 +290,11 @@ module.exports = function (RED) {
         EventEmitter.call(this);
         const node = this;
         RED.nodes.createNode(this, config);
-
+        console.log("GRUPO PORRA");
         node.server = RED.nodes.getNode(config.server);
         if (!node.server || !node.server.registerGroup) {
             return node.error(RED._("opc-da.error.missingconfig"));
         }
-
         /** @type {OPCGroupStateManager} */
         let opcGroupMgr;
         /** @type {OPCItemManager} */
@@ -306,6 +312,7 @@ module.exports = function (RED) {
         let updateRate = parseInt(config.updaterate);
         let deadband = parseInt(config.deadband);
         let validate = config.validate;
+        let onCleanUp = false;
 
         if (isNaN(updateRate)) {
             updateRate = 1000;
@@ -322,13 +329,17 @@ module.exports = function (RED) {
             deadband: deadband || 0
         }
 
+        if (node.server.getStatus() == 'online') {
+            node.server.createGroup(this);
+        }
+
          /**
          * @private
          * @param {OPCGroupStateManager} newGroup
          */
         async function setup(newGroup) {
             clearInterval(timer);
-            
+            console.log("SETUP DO GRUPO PORRA");
             try {
                 opcGroupMgr = newGroup;
                 opcItemMgr = await opcGroupMgr.getItemManager();
@@ -383,6 +394,9 @@ module.exports = function (RED) {
         }
 
         async function cleanup() {
+            if (onCleanUp) return;
+            onCleanUp = true;
+
             clearInterval(timer);
             clientHandlePtr = 1;
             clientHandles.length = 0;
@@ -407,10 +421,12 @@ module.exports = function (RED) {
                     opcGroupMgr = null;
                 }
             } catch (e) {
+                onCleanUp = false;
                 let err = e && e.stack || e;
                 console.log(e);
                 node.error("Error on cleaning up group: " + err);
             }
+            onCleanUp = false;
         }
 
         async function doCycle() {
@@ -487,7 +503,7 @@ module.exports = function (RED) {
          * @param {OPCGroupStateManager} newOpcGroup
          */
         node.updateInstance = async function updateInstance(newOpcGroup) {
-            await cleanup();
+            //await cleanup();
             await setup(newOpcGroup);
         }
 

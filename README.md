@@ -42,4 +42,4 @@ To add Items to a group, you can type the item name as it is stored at the serve
 |                            |                            |
 ## Contributing
 
-This is a partial implementation and there are lots that could be done to improve what is already supported or to add support for more DCOM features. Feel free to dive in! Open an issue or submit PRs.
+This is a partial implementation and there are lots that could be done to improve what is already supported or to add support for more OPC-DA features. Feel free to dive in! Open an issue or submit PRs.

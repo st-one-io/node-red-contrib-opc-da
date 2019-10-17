@@ -244,10 +244,10 @@ module.exports = function (RED) {
         }
 
         node.createGroup = async function createGroup(group) {
-            console.log(group.config);
-            let opcGroup = await opcServer.addGroup(group.config.name, group.config);
+            let opcGroup = await opcServer.addGroup(group.opcConfig.name, group.opcConfig);
             console.log("setup for group: " + group.config.name);
             await group.updateInstance(opcGroup);
+            group.onServerStatus(status);
         }
 
         node.getStatus = function getStatus() {
@@ -290,7 +290,7 @@ module.exports = function (RED) {
         EventEmitter.call(this);
         const node = this;
         RED.nodes.createNode(this, config);
-        console.log("GRUPO PORRA");
+
         node.server = RED.nodes.getNode(config.server);
         if (!node.server || !node.server.registerGroup) {
             return node.error(RED._("opc-da.error.missingconfig"));
@@ -339,7 +339,6 @@ module.exports = function (RED) {
          */
         async function setup(newGroup) {
             clearInterval(timer);
-            console.log("SETUP DO GRUPO PORRA");
             try {
                 opcGroupMgr = newGroup;
                 opcItemMgr = await opcGroupMgr.getItemManager();

@@ -448,6 +448,25 @@ module.exports = function (RED) {
             }
         }
 
+        function sanitizeValues(values) {
+            for(let item of values) {
+                // if it is a ComString
+                if (item.value instanceof opcda.dcom.ComString) {
+                    if (item.value.member._obj.referent._obj)
+                        item.value = item.value.member._obj.referent._obj;
+                } else if (item.value instanceof Array) {    
+                    for (let i = 0; i < item.value.length; i++) {
+                        if (item.value[i]._type == 23){
+                            item.value[i] = item.value[i]._obj.member._obj.referent._obj;
+                        } else {
+                            item.value[i] = item.value[i]._obj;
+                        }
+                    }
+                }
+            }
+            return values;
+        }
+
         function cycleCallback(values) {
             readInProgress = false;
            
@@ -455,7 +474,7 @@ module.exports = function (RED) {
                 doCycle();
                 readDeferred = 0;
             }
-
+            sanitizeValues(values);
             let changed = false;
             for (const item of values) {
                 const itemID = clientHandles[item.clientHandle];

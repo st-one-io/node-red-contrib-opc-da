@@ -71,6 +71,9 @@ module.exports = function (RED) {
 
     RED.httpAdmin.get('/opc-da/browseItems', RED.auth.needsPermission('node-opc-da.list'), function (req, res) {
         let params = req.query
+        function onBrowseError(e) {
+            RED.log.error(errorMessage(e));
+        }
 
         async function brosweItems() {
             let self = this;
@@ -81,10 +84,7 @@ module.exports = function (RED) {
             let comServer = new ComServer(new Clsid(params.clsid), params.address, session);
             
             comServer.on("disconnected", function(){
-                throw new Error("Disconnected from the server.");
-            });
-            comServer.on("e_classnotreg", function(){
-                throw new Error("The given Clsid is not registered on the server.");
+                onBrowseError(RED._("opc-da.error.disconnected"));
             });
 
             await comServer.init();
@@ -108,10 +108,7 @@ module.exports = function (RED) {
 
         brosweItems().then(items => {
             res.json({ items });
-        }).catch(err => {
-            res.json(errorMessage(err));
-            RED.log.error(errorMessage(err));
-        });
+        }).catch(onBrowseError);
     });
 
     /**
@@ -146,10 +143,19 @@ module.exports = function (RED) {
 
         async function onComServerError(e) {
             node.error(errorMessage(e));
-            node.warn("Trying to reconnect...");
-            //node.reConnect();
-            //await.cleanUp();
-            await setup().catch(onComServerError);
+            switch(e) {
+                case 0x00000005:
+                    return;
+                case 0xC0040010:
+                    return;
+                case 0x80040154:
+                    return;
+                case 0x00000061:
+                    return;
+                default:
+                    node.warn("Trying to reconnect...");
+                    await setup().catch(onComServerError);
+            }
         }
 
         function updateStatus(newStatus) {
@@ -186,7 +192,6 @@ module.exports = function (RED) {
 
             opcServer = new opcda.OPCServer();
             await opcServer.init(comObject);
-            
             for (const entry of groups.entries()) {
                 const name = entry[0];
                 const group = entry[1];
@@ -256,7 +261,7 @@ module.exports = function (RED) {
 
         node.registerGroup = function registerGroup(group) {
             if (groups.has(group.config.name)) {
-                return RED._('node-opc-da.warn.dupgroupname');
+                return RED._("opc-da.warn.dupgroupname");
             }
 
             groups.set(group.config.name, group);
@@ -359,7 +364,7 @@ module.exports = function (RED) {
                 let itemsList = items.map(e => {
                     return { itemID: e.item, clientHandle: clientHandlePtr++ }
                 });
-
+                
                 let resAddItems = await opcItemMgr.add(itemsList);
                
                 for (let i = 0; i < resAddItems.length; i++) {
@@ -383,7 +388,7 @@ module.exports = function (RED) {
             // we may support adding items at a later time
             if (updateRate < MIN_UPDATE_RATE) {
                 updateRate = MIN_UPDATE_RATE;
-                node.warn(RED._('node-opc-da.warn.minupdaterate', { value: updateRate + 'ms' }))
+                node.warn(RED._('opc-da.warn.minupdaterate', { value: updateRate + 'ms' }))
             }
 
             if (config.active) {
@@ -448,25 +453,6 @@ module.exports = function (RED) {
             }
         }
 
-        function sanitizeValues(values) {
-            for(let item of values) {
-                // if it is a ComString
-                if (item.value instanceof opcda.dcom.ComString) {
-                    if (item.value.member._obj.referent._obj)
-                        item.value = item.value.member._obj.referent._obj;
-                } else if (item.value instanceof Array) {    
-                    for (let i = 0; i < item.value.length; i++) {
-                        if (item.value[i]._type == 23){
-                            item.value[i] = item.value[i]._obj.member._obj.referent._obj;
-                        } else {
-                            item.value[i] = item.value[i]._obj;
-                        }
-                    }
-                }
-            }
-            return values;
-        }
-
         function cycleCallback(values) {
             readInProgress = false;
            
@@ -474,7 +460,7 @@ module.exports = function (RED) {
                 doCycle();
                 readDeferred = 0;
             }
-            sanitizeValues(values);
+            //sanitizeValues(values);
             let changed = false;
             for (const item of values) {
                 const itemID = clientHandles[item.clientHandle];
@@ -727,6 +713,9 @@ module.exports = function (RED) {
         let msgText;
         
         switch(errorCode){
+            case 0x80040154:
+                msgText = RED._('opc-da.error.classnotreg');
+                break;
             case 0x00000005:
                 msgText = "Access denied. Username and/or password might be wrong."
                 break;
@@ -778,6 +767,11 @@ module.exports = function (RED) {
             case 0x0004000D: 
                 msgText = "The server does not support the requested data rate but will use the closest available rate.";
                 break;
+            case 0x00000061:
+                msgText = "Clsid syntax is invalid";
+                break;
+            default:
+                msgText = "Unknown error!";
         }
         return String(errorCode) + " - " + msgText;
     }

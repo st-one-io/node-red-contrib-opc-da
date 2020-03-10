@@ -76,7 +76,6 @@ module.exports = function (RED) {
         }
 
         async function brosweItems() {
-            let self = this;
             let session = new Session();
             session = session.createSession(params.domain, params.username, params.password);
             session.setGlobalSocketTimeout(params.timeout);
@@ -129,7 +128,7 @@ module.exports = function (RED) {
         }
 
         //init variables
-        let status = 'unknown';
+        let status = 'offline';
         let isVerbose = (config.verbose == 'on' || config.verbose == 'off') ? (config.verbose == 'on') : RED.settings.get('verbose');
         let connOpts = {
             address: config.address,
@@ -143,20 +142,23 @@ module.exports = function (RED) {
         let comSession, comServer, comObject, opcServer;
 
         async function onComServerError(e) {
-            node.error(errorMessage(e));
             switch(e) {
                 case 0x00000005:
+                    node.error(errorMessage(e));
                     return;
                 case 0xC0040010:
+                    node.error(errorMessage(e));
                     return;
                 case 0x80040154:
+                    node.error(errorMessage(e));
                     return;
                 case 0x00000061:
+                    node.error(errorMessage(e));
                     return;
                 default:
+                    node.error(errorMessage(e));
                     node.warn("Trying to reconnect...");
-                    console.log("teste");
-                    retryTimeout = setTimeout(await node.reConnect, 5000);
+                    retryTimeout = setTimeout(await node.reConnect, 8000);
             }
         }
 
@@ -168,21 +170,20 @@ module.exports = function (RED) {
         }
 
         async function setup() {
-            console.log("aetaet");
+            updateStatus('connecting');
             clearTimeout(retryTimeout);
             let comSession = new Session();
             comSession = comSession.createSession(connOpts.domain, connOpts.username, connOpts.password);
             comSession.setGlobalSocketTimeout(connOpts.timeout);
 
             comServer = new ComServer(new Clsid(connOpts.clsid), connOpts.address, comSession);
-            //comServer.on('error', onComServerError);
-            
-            let self = this;
+
             comServer.on('e_classnotreg', function(){
                 node.error(RED._("opc-da.error.classnotreg"));
             });
 
             comServer.on("disconnected", function(){
+                reconnecting = false;
                 onComServerError(RED._("opc-da.error.disconnected"));
             })
 
@@ -200,40 +201,41 @@ module.exports = function (RED) {
                 const name = entry[0];
                 const group = entry[1];
                 let opcGroup = await opcServer.addGroup(name, group.opcConfig);
-                console.log("setup for group: " + name);
+                node.log("setup for group: " + name);
                 await group.updateInstance(opcGroup);
             }
-
+            reconnecting = false
             updateStatus('online');
         }
 
         async function cleanup() {
+            console.log("server cleanup");
+            if (status == 'unknown' || status == 'offline') return;
             try {
                 if (isOnCleanUp) return;
-                console.log("Cleaning Up");
+                node.log("Cleaning Up");
                 isOnCleanUp = true;
                 //cleanup groups first
-                console.log("Cleaning groups...");
+                node.log("Cleaning groups...");
                 for (const group of groups.values()) {
                     //await group.cleanUp();
                 }
-                console.log("Cleaned Groups");
+                node.log("Cleaned Groups");
                 if (opcServer) {
                     //await opcServer.end();
                     opcServer = null;
                 }
-                console.log("Cleaned opcServer");
+                node.log("Cleaned opcServer");
                 if (comSession) {
                     await comSession.destroySession();
                     comServer = null;
                 }
-                console.log("Cleaned session. Finished.");
+                node.log("Cleaned session. Finished.");
                 isOnCleanUp = false;
             } catch (e) {
                 //TODO I18N
                 isOnCleanUp = false;
                 let err = e && e.stack || e;
-                console.log(e);
                 node.error("Error cleaning up server: " + err, { error: err });
             }
 
@@ -243,18 +245,22 @@ module.exports = function (RED) {
         node.reConnect = async function reConnect() {
             /* if reconnect was already called, do nothing
                if reconnect was never called, try to restart the session */
+               console.log("reConnect");
             if (!reconnecting) {
-                console.log("cleaning up");
+                console.log("reconnecting");
+                updateStatus('offline');
                 reconnecting = true;
                 await cleanup();
-                await setup().catch(onComServerError);
-                reconnecting = false
+                await setup().catch(function (e) {
+                    reconnecting = false;
+                    onComServerError(e);
+                });
             }
         }
 
         node.createGroup = async function createGroup(group) {
             let opcGroup = await opcServer.addGroup(group.opcConfig.name, group.opcConfig);
-            console.log("setup for group: " + group.config.name);
+            node.log("setup for group: " + group.config.name);
             await group.updateInstance(opcGroup);
             group.onServerStatus(status);
         }
@@ -275,7 +281,10 @@ module.exports = function (RED) {
             groups.delete(group.config.name);
         }
 
-        setup().catch(onComServerError);
+        setup().catch(function (e) {
+            reconnecting = false;
+            onComServerError(e);
+        });
     }
     RED.nodes.registerType("opc-da server", OPCDAServer, {
         credentials: {
@@ -320,7 +329,6 @@ module.exports = function (RED) {
         let oldItems = {};
         let updateRate = parseInt(config.updaterate);
         let deadband = parseInt(config.deadband);
-        let validate = config.validate;
         let onCleanUp = false;
 
         if (isNaN(updateRate)) {
@@ -384,7 +392,6 @@ module.exports = function (RED) {
                 }
             } catch (e) {
                 let err = e && e.stack || e;
-                console.log(e);
                 node.error("Error on setting up group: " + err);
             }
 
@@ -402,7 +409,7 @@ module.exports = function (RED) {
         }
 
         async function cleanup() {
-            if (onCleanUp) return;
+            if (onCleanUp || node.server.getStatus() ) return;
             onCleanUp = true;
 
             clearInterval(timer);
@@ -413,26 +420,28 @@ module.exports = function (RED) {
             try {
                 if (opcSyncIo) {
                     await opcSyncIo.end();
-                    console.log("GroupCLeanup - opcSync");
+                    node.log("GroupCLeanup - opcSync");
                     opcSyncIo = null;
                 }
                 
                 if (opcItemMgr) {
                     await opcItemMgr.end();
-                    console.log("GroupCLeanup - opcItemMgr");
+                    node.log("GroupCLeanup - opcItemMgr");
                     opcItemMgr = null;
                 }
                 
                 if (opcGroupMgr) {
                     await opcGroupMgr.end();
-                    console.log("GroupCLeanup - opcGroupMgr");
+                    node.log("GroupCLeanup - opcGroupMgr");
                     opcGroupMgr = null;
                 }
             } catch (e) {
                 onCleanUp = false;
                 let err = e && e.stack || e;
-                console.log(e);
-                node.error("Error on cleaning up group: " + err);
+                if (node.server.getStatus() != 'online')
+                    node.error("Error on cleaning up group: Disconnected from the server");
+                else
+                    node.error("Error on cleaning up group: " + err);
             }
             onCleanUp = false;
         }
@@ -518,7 +527,7 @@ module.exports = function (RED) {
         node.on('close', async function (done) {
             node.server.unregisterGroup(this);
             await cleanup();
-            console.log("group cleaned");
+            node.log("group cleaned");
             done();
         });
         let err = node.server.registerGroup(this);

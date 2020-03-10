@@ -120,7 +120,8 @@ module.exports = function (RED) {
         const node = this;
         let isOnCleanUp = false;
         let reconnecting = false;
-        
+        let retryTimeout = null;
+
         RED.nodes.createNode(this, config);
 
         if (!this.credentials) {
@@ -154,7 +155,8 @@ module.exports = function (RED) {
                     return;
                 default:
                     node.warn("Trying to reconnect...");
-                    await setup().catch(onComServerError);
+                    console.log("teste");
+                    retryTimeout = setTimeout(await node.reConnect, 5000);
             }
         }
 
@@ -166,6 +168,8 @@ module.exports = function (RED) {
         }
 
         async function setup() {
+            console.log("aetaet");
+            clearTimeout(retryTimeout);
             let comSession = new Session();
             comSession = comSession.createSession(connOpts.domain, connOpts.username, connOpts.password);
             comSession.setGlobalSocketTimeout(connOpts.timeout);

@@ -284,7 +284,16 @@ module.exports = function (RED) {
             reconnecting = false;
             onComServerError(e);
         });
+
+        node.on('close', async function (done) {
+            clearTimeout(retryTimeout);
+            node.log("server cleanup on close");
+            await cleanup();
+            node.log("server cleaned");
+            done();
+        });
     }
+    
     RED.nodes.registerType("opc-da server", OPCDAServer, {
         credentials: {
             username: { type: "text" },

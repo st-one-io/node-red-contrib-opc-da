@@ -164,13 +164,11 @@ module.exports = function (RED) {
 
         function updateStatus(newStatus) {
             if (status == newStatus) return;
-
             status = newStatus;
             groups.forEach(group => group.onServerStatus(status));
         }
 
         async function setup() {
-            updateStatus('connecting');
             clearTimeout(retryTimeout);
             let comSession = new Session();
             comSession = comSession.createSession(connOpts.domain, connOpts.username, connOpts.password);
@@ -190,7 +188,7 @@ module.exports = function (RED) {
             comServer.on("e_accessdenied", function() {
                 node.error(RED._("opc-da.error.accessdenied"));
             });
-
+            updateStatus('connecting');
             await comServer.init();
             
             comObject = await comServer.createInstance();
@@ -237,9 +235,10 @@ module.exports = function (RED) {
                 isOnCleanUp = false;
                 let err = e && e.stack || e;
                 node.error("Error cleaning up server: " + err, { error: err });
+                updateStatus('unknown');
             }
 
-            updateStatus('unknown');
+            updateStatus('offline');
         }
 
         node.reConnect = async function reConnect() {
@@ -409,7 +408,7 @@ module.exports = function (RED) {
         }
 
         async function cleanup() {
-            if (onCleanUp || node.server.getStatus() ) return;
+            if (onCleanUp || node.server.getStatus() == 'offline') return;
             onCleanUp = true;
 
             clearInterval(timer);

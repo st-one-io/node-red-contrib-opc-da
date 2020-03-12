@@ -288,6 +288,8 @@
 	<div class="form-row" style="margin-bottom:0;">
 		<input type="text" id="node-config-input-item-add" data-i18n="[placeholder]opc-da.group.placeholder.itemadd">
 		<a href="#" class="editor-button" id="node-config-opc-da-item-add"><i class="fa fa-plus"></i></a>
+		<a id="node-config-upload-list" class="editor-button"><i class="fa fa-upload"></i></a>
+		<input type="file" id="list-browse" style="display: block; visibility: hidden; width: 0; height: 0;">
 	</div>
 	<div class="form-row node-input-items-container-row">
 		<ol id="node-config-input-items-container"></ol>
@@ -414,6 +416,29 @@
 				updateDataList(groupInput.val());
 			});
 			updateDataList(self.group);
+
+			// Add list of items handling
+			var listUpload = $("#list-browse");
+			var addList = $("#node-config-upload-list");
+			addList.click(function() {
+				listUpload.click();
+			});
+
+			var fileToUpload;
+			listUpload.on('change', function (event) {
+				fileToUpload = event.target.files[0];
+				
+				var reader = new FileReader();
+				reader.onload= function(progresEvent) {
+					// By lines
+					var lines = this.result.split('\n');
+					for(var line = 0; line < lines.length; line++){
+						
+						itemList.editableList('addItem',{item: lines[line]});
+					}
+				};
+				reader.readAsText(fileToUpload);
+			});
 
 		},
 		oneditsave: function () {

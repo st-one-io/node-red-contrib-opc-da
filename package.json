@@ -32,6 +32,6 @@
     "author": "Smart-Tech Controle e Automação Ltda.",
     "license": "Apache-2.0",
     "dependencies": {
-        "node-opc-da": "^1.0.4"
+        "node-opc-da": "^1.0.7"
     }
 }

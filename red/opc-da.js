@@ -34,6 +34,20 @@ function equals(a, b) {
     return false;
 }
 
+/**
+ * A very simple function that simply returns the apropriate
+ * object containing the major and minor version numbers
+ * @param {String} version 
+ */
+function parseComVersion (version) {
+    console.log("DEBUG", version);
+    if (version == "5.4") {
+        return {major: 5, minor: 4};
+    } else if (version == "5.7"){
+        return {major: 5, minor: 7};
+    }
+}
+
 const MIN_UPDATE_RATE = 100;
 
 module.exports = function (RED) {
@@ -73,15 +87,16 @@ module.exports = function (RED) {
         let params = req.query
         function onBrowseError(e) {
             RED.log.error(errorMessage(e));
+            res.json({err: errorMessage(e)})
         }
 
-        async function brosweItems() {
+        async function browseItems() {
             let self = this;
             let session = new Session();
             session = session.createSession(params.domain, params.username, params.password);
             session.setGlobalSocketTimeout(params.timeout);
-
-            let comServer = new ComServer(new Clsid(params.clsid), params.address, session);
+            
+            let comServer = new ComServer(new Clsid(params.clsid), params.address, session, parseComVersion(params.comversion));
             
             comServer.on("disconnected", function(){
                 onBrowseError(RED._("opc-da.error.disconnected"));
@@ -106,7 +121,7 @@ module.exports = function (RED) {
             return items;
         }
 
-        brosweItems().then(items => {
+        browseItems().then(items => {
             res.json({ items });
         }).catch(onBrowseError);
     });
@@ -136,8 +151,10 @@ module.exports = function (RED) {
             username: this.credentials.username,
             password: this.credentials.password,
             clsid: config.clsid,
-            timeout: config.timeout
+            timeout: config.timeout,
+            comversion: parseComVersion(config.os)
         };
+        
         let groups = new Map();
         let comSession, comServer, comObject, opcServer;
 
@@ -154,6 +171,7 @@ module.exports = function (RED) {
                     return;
                 default:
                     node.warn("Trying to reconnect...");
+                    await new Promise(resolve => setTimeout(resolve, 5000));
                     await setup().catch(onComServerError);
             }
         }
@@ -169,9 +187,8 @@ module.exports = function (RED) {
             let comSession = new Session();
             comSession = comSession.createSession(connOpts.domain, connOpts.username, connOpts.password);
             comSession.setGlobalSocketTimeout(connOpts.timeout);
-
-            comServer = new ComServer(new Clsid(connOpts.clsid), connOpts.address, comSession);
-            //comServer.on('error', onComServerError);
+            
+            comServer = new ComServer(new Clsid(connOpts.clsid), connOpts.address, comSession, connOpts.comversion);
             
             let self = this;
             comServer.on('e_classnotreg', function(){
@@ -773,7 +790,7 @@ module.exports = function (RED) {
             default:
                 msgText = "Unknown error!";
         }
-        return String(errorCode) + " - " + msgText;
+        return errorCode.toString(16) + " - " + msgText;
     }
     RED.nodes.registerType("opc-da out", OPCDAOut);
 };

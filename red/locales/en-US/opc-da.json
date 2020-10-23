@@ -44,6 +44,7 @@
                 "username": "Username",
                 "password": "Password",
                 "progid": "ProgId",
+                "os": "OS",
                 "clsid": "ClsId",
                 "custom": "Custom...",
                 "verbose": "Debug",
@@ -58,6 +59,10 @@
                 "default": "Default (command line)",
                 "on": "On",
                 "off": "Off"
+            },
+            "options": {
+                "old" : "Windows XP SP3 or older",
+                "new": "Windows Vista or newer"
             }
         },
         "label": {

@@ -34,6 +34,16 @@
 		<input type="password" id="node-config-input-password" data-i18n="[placeholder]opc-da.server.label.password">
 	</div>
 	<div class="form-row">
+        <label for="node-config-input-os">
+            <i class="fa fa-link"></i>
+            <span data-i18n="opc-da.server.label.os"></span>
+        </label>
+        <select type="text" id="node-config-input-os">
+            <option value="5.4" data-i18n="opc-da.server.options.old"></option>
+            <option value="5.7" data-i18n="opc-da.server.options.new"></option>
+        </select>
+    </div>
+	<div class="form-row">
 		<label for="node-config-input-progid"><i class="fa fa-window-maximize"></i> <span data-i18n="opc-da.server.label.progid"></span></label>
 		<select type="text" id="node-config-input-progid" style="width: 70%">
 		</select>
@@ -106,10 +116,8 @@
 			address: { value: "", required: true },
 			domain: { value: "", required: true},
 			progid: { value: "" },
-			clsid: {
-				value: "",
-				//validate: RED.validators.regex(/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i)
-			},
+			os: { value: "5.4", require: true},
+			clsid: { value: "" },
 			verbose: { value: "default" },
 			name: { value: "" },
 			vartable: { value: [] },
@@ -132,11 +140,13 @@
 				{ clsid: "2E565242-B238-11D3-842D-0008C779D775", progid: "Softing.OPCToolboxDemo_ServerDA.1" }
 			];
 
+			var osField = $('#node-config-input-os');
 			var progIdField = $('#node-config-input-progid');
 			var clsIdField = $('#node-config-input-clsid');
 			
 			var lastClsId = self.clsid;
 			var lastProgId = '';
+			var lastOS = '';
 
 			// spinners
 			$("#node-config-input-timeout").spinner({
@@ -189,14 +199,14 @@
 			}
 			testBtn.click(function () {
 				if(testBtn.hasClass('disabled')) return;
-
 				var queryData = {
 					address: $('#node-config-input-address').val(),
 					domain: $('#node-config-input-domain').val(),
 					username: $('#node-config-input-username').val(),
 					password: $('#node-config-input-password').val(),
 					clsid: $('#node-config-input-clsid').val(),
-					timeout: $('#node-config-input-timeout').val()
+					timeout: $('#node-config-input-timeout').val(),
+					comversion: $('#node-config-input-os').val()
 				};
 
 				if(!queryData.address || !queryData.domain || !queryData.username || !queryData.password || !queryData.clsid) return;

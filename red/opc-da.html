@@ -34,15 +34,12 @@
 		<input type="password" id="node-config-input-password" data-i18n="[placeholder]opc-da.server.label.password">
 	</div>
 	<div class="form-row">
-        <label for="node-config-input-os">
-            <i class="fa fa-link"></i>
-            <span data-i18n="opc-da.server.label.os"></span>
-        </label>
-        <select type="text" id="node-config-input-os">
-            <option value="5.4" data-i18n="opc-da.server.options.old"></option>
-            <option value="5.7" data-i18n="opc-da.server.options.new"></option>
-        </select>
-    </div>
+		<label for="node-config-input-os"><i class="fa fa-link"></i> <span data-i18n="opc-da.server.label.os"></span></label>
+		<select type="text" id="node-config-input-os">
+		    <option value="5.4" data-i18n="opc-da.server.options.old"></option>
+		    <option value="5.7" data-i18n="opc-da.server.options.new"></option>
+		</select>
+	</div>
 	<div class="form-row">
 		<label for="node-config-input-progid"><i class="fa fa-window-maximize"></i> <span data-i18n="opc-da.server.label.progid"></span></label>
 		<select type="text" id="node-config-input-progid" style="width: 70%">
@@ -61,8 +58,8 @@
 		</select>
 	</div>
 	<div class="form-row">
-			<label for="node-config-input-timeout"><i class="fa fa-refresh"></i> <span data-i18n="opc-da.group.label.timeout"></span></label>
-			<input type="text" id="node-config-input-timeout" style="width: 60px;"> <span>ms</span>
+		<label for="node-config-input-timeout"><i class="fa fa-refresh"></i> <span data-i18n="opc-da.group.label.timeout"></span></label>
+		<input type="text" id="node-config-input-timeout" style="width: 60px;"> <span>ms</span>
 	</div>
 	<div class="form-row">
 		<label for="node-config-input-name"><i class="fa fa-tag"></i> <span data-i18n="opc-da.label.name"></span></label>
@@ -70,6 +67,7 @@
 	</div>
 	<div class="form-row">
 		<a href="#" class="editor-button" id="node-config-opc-da-server-test" style="margin: 4px"><i class="fa fa-plug"></i> <span data-i18n="opc-da.server.label.test"></span></a>
+		<a href="#" class="editor-button" id="node-config-opc-da-server-export" style="margin: 4px"><i class="fa fa-upload"></i></i> <span data-i18n="opc-da.server.label.export"></span></a>
 		<p class="form-tips" id="node-config-opc-da-server-rest-result" style="display:none;"></p>
 	</div>
 	<div class="form-row" style="margin-bottom:0;">
@@ -137,7 +135,8 @@
 				{ clsid: "7904C302-AC19-11D4-9E1E-00105A4AB1C6", progid: "CoDeSys.OPC.02" },
 				{ clsid: "A879768A-7387-11D4-B0D8-009027242C59", progid: "ICONICS.SimulatorOPCDA.2" },
 				{ clsid: "F8582CF2-88FB-11D0-B850-00C0F0104305", progid: "Matrikon.OPC.Simulation.1" },
-				{ clsid: "2E565242-B238-11D3-842D-0008C779D775", progid: "Softing.OPCToolboxDemo_ServerDA.1" }
+				{ clsid: "2E565242-B238-11D3-842D-0008C779D775", progid: "Softing.OPCToolboxDemo_ServerDA.1" },
+				{ clsid: "137bb965-84bb-11d5-9ff1-00105a4ab1c6", progid: "SoMachine.OPC.DA" }
 			];
 
 			var osField = $('#node-config-input-os');
@@ -190,6 +189,8 @@
 			var testBtn = $('#node-config-opc-da-server-test');
 			var testBtnIcon = testBtn.children('i');
 			var testResult = $('#node-config-opc-da-server-rest-result');
+			var exportBtn = $('#node-config-opc-da-server-export');
+			var exportBtnIcon = exportBtn.children('i');
 			var itemsList = $('#node-config-opc-da-server-items');
 			var itemsListRow = $('.node-config-opc-da-server-items-container-row');
 			function populateItems(items) {
@@ -244,7 +245,23 @@
 					testResult.show();
 				});
 			});
+			
+			exportBtn.click(function(){
+				var items = $('#node-config-opc-da-server-items').children('li');
+				var itemData = [];
+				
+				items.each(function (i) {
+					itemData.push($(this).text());
+				});
 
+				var jsonData = "text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(itemData, null, 4));
+				console.log();
+				const a = document.createElement('a');
+				a.href = 'data:' + jsonData;
+				a.download = 'export.json';
+				a.click();
+			});
+			
 			populateItems(self.vartable);
 		},
 		oneditsave: function () {
@@ -291,6 +308,11 @@
 	<div class="form-row">
 		<label for="node-config-input-name"><i class="fa fa-tag"></i> <span data-i18n="opc-da.label.name"></span></label>
 		<input type="text" id="node-config-input-name" data-i18n="[placeholder]opc-da.label.name">
+	</div>
+	<div class="form-row">
+		<input id="node-file-item" type="file" name="filename" accept="application/JSON" style="display:none"/>
+		<a href="#" class="editor-button" id="node-config-opc-da-item-import" style="margin: 4px"><i class="fa fa-download"></i></i> <span data-i18n="opc-da.group.label.import"></span></a>
+		<a href="#" class="editor-button" id="node-config-opc-da-item-remove" style="margin: 4px"><i class="fa fa-trash"></i></i> <span data-i18n="opc-da.group.label.remove"></span></a>
 	</div>
 	<div class="form-row" style="margin-bottom:0;">
 		<label><i class="fa fa-list"></i> <span data-i18n="opc-da.group.label.items"></span></label>
@@ -366,6 +388,33 @@
 				$("#node-config-input-deadband").val(0);
 			}
 
+			// Items import
+			let importBtn = $("#node-config-opc-da-item-import");
+			let itemFile = $("#node-file-item");	
+			
+			importBtn.click(function(){
+				itemFile.click();
+			});
+			
+			itemFile.change(function(file){
+				const reader = new FileReader();
+				reader.onload = function() {
+					var items = JSON.parse(reader.result);
+					items.forEach(function(item) {itemList.editableList('addItem', { item: item });});
+				};
+				
+				reader.readAsText(file.target.files[0]);
+				$(this).val(""); // to get the change event if user select again the same file
+			});
+
+			// Items remove
+			let removeBtn = $("#node-config-opc-da-item-remove");
+			let itemArea = $("#node-config-input-items-container");
+			
+			removeBtn.click(function(){
+				itemArea.empty();
+			});
+			
 			// Item list
 			var itemList = $("#node-config-input-items-container").css('min-height', '150px').css('min-width', '450px').editableList({
 				addItem: function (container, i, item) {

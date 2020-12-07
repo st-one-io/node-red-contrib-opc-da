@@ -31,7 +31,9 @@
                 "active": "Active",
                 "validate": "Validate",
                 "items": "Items",
-                "timeout": "Timeout"
+                "timeout": "Timeout",
+       		    "import" : "Import items",
+				"remove" : "Remove items"
             },
             "placeholder": {
                 "itemadd": "Add a new item"
@@ -49,7 +51,8 @@
                 "custom": "Custom...",
                 "verbose": "Debug",
                 "test": "Test and get items",
-                "items": "Server items"
+                "items": "Server items",
+                "export": "Export items"
             },
             "placeholder": {
                 "address": "IP or FQDN (e.g. dev.example.com)",
